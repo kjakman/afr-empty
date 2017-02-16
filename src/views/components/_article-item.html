@@ -1,0 +1,49 @@
+
+          {if ($scope.articles)}
+            {$single = 0}
+            {$content = $article.content|truncate_html:300}
+          {else}
+            {$single = 1}
+            {$content = $article.content}
+          {/if}
+          
+          {$comment_count = "comment"|count_objects:['article_id' => $article.id]}
+          
+          <!-- START BLOG POST -->
+          <header class="post-header">
+            {if ($article.media)}
+              {$mediaAr = $article.media|any2array}
+            <div class="fotorama" data-allowfullscreen="true">
+              {foreach from=$mediaAr item=media}
+                <img src="{$media|photo}" alt="" title="" />
+              {/foreach}
+            </div>
+            {/if}
+          </header>
+          <div class="post-inner">
+             <h4 class="post-title text-darken">{$article.title}</h4>
+             <ul class="post-meta">
+                <li><i class="fa fa-calendar"></i><a href="#">{$article.post_date}</a></li>
+                <li><i class="fa fa-user"></i><a href="#">{$article.user_id|username}</a></li>
+                <li><i class="fa fa-tags"></i><a href="#">Lifestyle</a></li>
+                <li><i class="fa fa-comments"></i>
+                  <a href="{$this_path}{$article.id}#comments">
+                  {$comment_count|default:'0'} 
+                  {if ($comment_count == 1)}
+                    {'comment'|translate}
+                  {else}
+                    {'comments'|translate}
+                  {/if}
+                  </a>
+                </li>
+                {if ($scope.auth_add_article || $scope.auth_edit_article)}
+                <li><a class="text-primary" href="{$page.page_type|link}{$article.id}?edit"><i class="fa fa-pencil-square"></i> {'edit'|translate:'t'}</a></li>
+                {/if}
+                
+             </ul>
+             <p class="post-desciption">{$content}</p>
+             {if ($scope.articles)}
+             <a class="btn btn-small btn-primary" href="{$page.page_type|link}{$article.id}">{'read more'|translate:'t'}</a>
+             {/if}
+          </div>
+          <!-- END BLOG POST -->
