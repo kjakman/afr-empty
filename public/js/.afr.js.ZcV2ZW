@@ -1,0 +1,2039 @@
+// start base1.js
+function isExisting(obj){
+  return typeof(obj)!='undefined';
+}
+
+// removes empty elements from form before submitting (makes for cleaner query string.)
+function cleanEmptyFields(theform) {
+	//var theform = thebutton.form;
+	var fs='';
+	for(i=0; i<theform.elements.length; i++) {
+		var fldName = theform.elements[i].name;
+		if(theform.elements[i].value == '') theform.elements[i].disabled = true; 
+	}
+	return true;		
+}
+
+function hideEl(el){
+	//return;
+	if (document.getElementById(el)){
+        document.getElementById(el).style.display = 'none';
+  } else {
+    //alert('hideEl: no element'+el);
+  }
+}
+
+function showEl(el){
+  //alert('showEl:'+el);
+  if (document.getElementById(el)){
+      document.getElementById(el).style.display = 'block';
+  } else {
+    alert('showEl: no element'+el);
+  }
+}
+
+// limits input to text field and show # characters left
+function limitText(limitField, limitCount, limitNum) {
+  var $limitField = $('#'+limitField);
+  var $limitCount = $('#'+limitCount);
+  if ($limitField.val().length > limitNum) {
+		$limitField.val($limitField.val().substring(0, limitNum));
+	} else {
+		$limitCount.html(limitNum - $limitField.val().length);
+	}
+}
+
+function autocomplete_off(el_id) { // hack since autocomplete='off' is not strict (x)html
+  if(el = document.getElementById(el_id)) el.setAttribute("autocomplete", "off");
+}
+
+/**
+ * Function : dump()
+ * Arguments: The data - array,hash(associative array),object
+ *    The level - OPTIONAL
+ * Returns  : The textual representation of the array.
+ * This function was inspired by the print_r function of PHP.
+ * This will accept some data as the argument and return a
+ * text that will be a more readable version of the
+ * array/hash/object that is given.
+ * Docs: http://www.openjs.com/scripts/others/dump_function_php_print_r.php
+ */
+function dump(arr,level) {
+	var dumped_text = "";
+	if(!level) level = 0;
+	
+	//The padding given at the beginning of the line.
+	var level_padding = "";
+	for(var j=0;j<level+1;j++) level_padding += "    ";
+	
+	if(typeof(arr) == 'object') { //Array/Hashes/Objects 
+		for(var item in arr) {
+			var value = arr[item];
+			
+			if(typeof(value) == 'object') { //If it is an array,
+				dumped_text += level_padding + "'" + item + "' ...\n";
+				dumped_text += dump(value,level+1);
+			} else {
+				dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+			}
+		}
+	} else { //Stings/Chars/Numbers etc.
+		dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
+	}
+	return dumped_text;
+}
+
+
+// Numeric helpers 
+// like toFixed (but w/o IE problem where 0.9 becomes 0 and with proper rounding)
+// if integer, returns integer (thus 4.00 => 4)
+function toFixedCond(value, precision) {
+  var dec=parseFloat(value) - parseInt(value);
+  if(!dec) return parseInt(value);
+  else return toFixedUncond(value, precision);
+}
+
+function toFixedUncond(value, precision) {
+  var power = Math.pow(10, precision || 0);
+  var result = Math.round(value * power) / power; // round to given precision  
+  return result.toFixed(precision); 
+}
+
+// if any form field changes, uses will be warned if trying to leave the page
+var needToConfirm = false;
+var formChangedFlag = false; 
+window.onbeforeunload = confirmExit;
+
+function confirmExit() {
+  if (!needToConfirm || !formChangedFlag) return;
+  return "You have attempted to leave this page. If you have made any changes to the fields without Saving, your changes will be lost. Are you sure you want to exit this page?";
+}
+
+function d2h(d) {return d.toString(16);} // dec 2 hex
+function h2d(h) {return parseInt(h,16);} // hex 2 dec
+
+function color_brightness(hexcolor) {
+  var rgb = color_rgb(hexcolor);
+  //alert("rgb for " + hexcolor + " = " + rgb.r + '/' + rgb.g + '/' + rgb.b + ' = ' + (rgb.r+ rgb.g + rgb.b) / 765);
+  return (rgb.r+ rgb.g + rgb.b) / 765;
+}
+
+// returns decimal RGB values from hex color (FFF or FFFFFF)
+function color_rgb(hexcolor) {
+  var rgb = new Object;
+  if(hexcolor.length == 3) {
+    rgb.r = h2d(hexcolor.charAt(0)) ^ 2;
+    rgb.g = h2d(hexcolor.charAt(1)) ^ 2;
+    rgb.b = h2d(hexcolor.charAt(2)) ^ 2;
+  } else if(hexcolor.length == 6) {
+    rgb.r = h2d(hexcolor.charAt(0) + '' + hexcolor.charAt(1));
+    rgb.g = h2d(hexcolor.charAt(2) + '' + hexcolor.charAt(3));
+    rgb.b = h2d(hexcolor.charAt(4) + '' + hexcolor.charAt(5));
+    //alert(hexcolor.charAt(0) + '' + hexcolor.charAt(1) + ' => ' + h2d(hexcolor.charAt(0) + '' + hexcolor.charAt(1)));
+  }
+  
+  return rgb;
+}
+
+// Prototypes
+
+String.prototype.trim = function() {
+	return this.replace(/^\s+|\s+$/g,"");
+}
+String.prototype.ltrim = function() {
+	return this.replace(/^\s+/,"");
+}
+String.prototype.rtrim = function() {
+	return this.replace(/\s+$/,"");
+}
+
+String.prototype.ucfirst = function(){
+  return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+
+String.prototype.capitalize = function(){
+  return this.replace(/\S+/g, function(a){
+      return a.charAt(0).toUpperCase() + a.slice(1).toLowerCase();
+  });
+};
+
+function isEmail(em) {
+   if(em.length < 6  || em.indexOf('@')<1 || em.indexOf('.') < 1) {
+      alert(em + " " + error_not_valid_email);
+      return false;
+   }
+   var validchars = 'abcdefghijklmnopqrstuvwxyz0123456789@.-_';
+   for (var i=0; i < em.length; i++) {
+      var letter = em.charAt(i).toLowerCase();
+      if (validchars.indexOf(letter) != -1)
+         continue;
+      alert(error_invalid_character + ": " + letter + " " + error_in_email_address);
+      return false;
+   }
+   return true;
+}
+
+/*
+JSTarget function by Roger Johansson, www.456bereastreet.com
+http://www.456bereastreet.com/archive/200610/opening_new_windows_with_javascript_version_12/
+*/
+var JSTarget = {
+init: function(att,val,warning) {
+if(!text_new_window) var text_new_window = '(Opens in new window)';
+if (document.getElementById && document.createElement && document.appendChild) {
+var strAtt = ((typeof att == 'undefined') || (att == null)) ? 'class' : att;
+var strVal = ((typeof val == 'undefined') || (val == null)) ? 'non-html' : val;
+var strWarning = ((typeof warning == 'undefined') || (warning == null)) ? ' ('+ text_new_window +')' : warning;
+var oWarning;
+var arrLinks = document.getElementsByTagName('a');
+var oLink;
+var oRegExp = new RegExp("(^|\\s)" + strVal + "(\\s|$)");
+for (var i = 0; i < arrLinks.length; i++) {
+oLink = arrLinks[i];
+if ((strAtt == 'class') && (oRegExp.test(oLink.className)) || (oRegExp.test(oLink.getAttribute(strAtt)))) {
+oWarning = document.createElement("em");
+oWarning.appendChild( document.createTextNode(strWarning) );
+oLink.appendChild(oWarning);
+oLink.onclick = JSTarget.openWin;
+}
+oWarning = null;
+}
+}
+},
+openWin: function(e) {
+var event = (!e) ? window.event : e;
+if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return true;
+else {
+var oWin = window.open(this.getAttribute('href'), '_blank');
+if (oWin) {
+if (oWin.focus) oWin.focus();
+return false;
+}
+oWin = null;
+return true;
+}
+},
+/*
+addEvent function from http://www.quirksmode.org/blog/archives/2005/10/_and_the_winner_1.html
+*/
+addEvent: function(obj, type, fn) {
+if (obj.addEventListener)
+obj.addEventListener(type, fn, false);
+else if (obj.attachEvent) {
+obj["e"+type+fn] = fn;
+obj[type+fn] = function() {obj["e"+type+fn]( window.event );}
+obj.attachEvent("on"+type, obj[type+fn]);
+}
+}
+};
+
+// end JS Target
+// end base1.js
+
+// start app.js
+
+function search_submit() { 
+  var searchForm = $('#advanced_search_form');
+  for (var i = 0; i < searchForm.length; i++) {
+    var sel_field;
+    var search_field;
+    var iname = searchForm[i].name;
+    var itype  = searchForm[i].type;
+    var ivalue = searchForm[i].value;      
+
+    if(iname.indexOf('_select_')==0 && ivalue) {
+      fld = iname.substr(8);
+      searchfld = document.getElementById('_search_'  +fld);
+      searchfld.name = '_search_' + ivalue; // set/update name of search field
+    }
+
+    if((itype!= 'submit' && itype != 'hidden') || ivalue=='' || iname=='search') { // remove all fields except add/delete buttons and hidden fields
+      searchForm[i].disabled=true;
+    }
+          
+  }
+
+  return true;
+
+}
+
+
+// converts search operator + value1, value2 into search terms to text used in GET or POST field to search recordset
+// also; enables disabled inputs based on value of preceeding inputs
+function search2text(fld) { 
+  var searchForm = $('#advanced_search_form');
+  var field_el    = document.getElementById('_select_'  +fld);
+  var operator_el = document.getElementById('_op_'  +fld);
+  var value1_el   = document.getElementById('_val1_'+fld);
+  var value2_el   = document.getElementById('_val2_'+fld);  
+
+  var field    = field_el.value;
+  var operator = operator_el.value;
+  var value1   = value1_el.value;
+  var value2   = value2_el ? value2_el.value : '';
+
+  //alert("fld=" + fld + " op=" + operator + " val1=" +value1 + " val2=" + value2);  
+
+  // calculate result
+  if(!field || !operator) {
+    result = '';
+  } else if(operator == '=') {
+    result = value1;
+  } else if(operator == '><') {
+    result =  value2 != '' ? operator + value1 + ',' + value2 : '';
+  } else if(!value1) {
+    result = '';
+  } else {
+    var result = operator + value1;
+  } 
+
+  
+  // enable/disable inputs
+  operator_el.disabled = field ? false : true;
+  value1_el.disabled = operator && !operator_el.disabled ? false : true; 
+  value2_el.disabled = operator == '><' && value1 && !value1_el.disabled ? false : true; 
+  if(operator == '><' && value1 !='' && value2 !='' && value2 < value1) {
+    result = '';
+    alert("Value 2 must be greater than or equal to value1");
+  }
+  if(fld=='_new_') $('#_show_search').attr("disabled", (result ? false : true)); 
+
+  // set the result field
+  $('#_adv_search_'+fld).val(result); 
+  
+  alert("search2text: " + '#_adv_search_'+fld + "=" + result + " now:" + $('#_adv_search_'+fld).val());
+
+}
+
+// takes a set of checkboxes (with same name)
+// writes separated list of values if checked to result_id
+function checkboxes2string(parent_id, result_id) {
+  var checkArray = new Array();
+  var checkboxes_on = $('#' + parent_id + ' input:checked');
+  for (var i = 0; i < checkboxes_on.length; i++) checkArray.push(checkboxes_on[i].value);
+  $('#' + result_id).val(checkArray.join(','));
+}
+
+// disabled all empty fields in a form
+function cleanSearch(obj) {
+  //obj.parent.disabled=true;
+  //obj.ref_link.disabled=true;
+  //obj.ref_name.disabled=true;
+  for (var i = 0; i < obj.length; i++) {
+    var iname = obj[i].name;
+    var ivalue = obj[i].value;
+    if(ivalue == '') obj[i].disabled=true;    
+    if(iname.indexOf('__comp__')>-1 && ivalue=='') { // this is an empty comparison operator - disable
+      obj[i].disabled=true;
+    }
+  }
+  return true;
+}
+
+// end app.js
+
+// start datetime.js 
+
+// date/time helpers 
+function add_days(start_date, num_days) {
+  var sd = new Date(start_date.getTime() + num_days * 1000 * 3600 * 24);
+  return sd;
+}
+
+function add_hours(start_date, num_hours) {
+  var sd = new Date(start_date.getTime() + num_hours * 1000 * 3600);
+  return sd;
+}
+
+// returns Thursay September 24, 2009
+function sql2human(dateStr) {
+  var date = sql2date(dateStr);
+  return date.toLocaleDateString();
+}
+
+// returns 24 Sep 2009
+function sql2human_short(dateStr) {
+  var date = sql2date(dateStr);
+  return date.getDate() + " " + monthNamesShort[date.getMonth()] + " " + date.getFullYear();
+}
+
+// returns 24 Sep
+function sql2human_shortest(dateStr) {
+  var date = sql2date(dateStr);
+  return date.getDate() + " " + monthNamesShort[date.getMonth()];
+}
+
+// returns Thu 24 Sep 2009
+function sql2human_short_day(dateStr) {
+  var date = sql2date(dateStr);
+  return dayNamesShort[date.getDay()] + " " + date.getDate() + " " + monthNamesShort[date.getMonth()] + " " + date.getFullYear();
+}
+
+// returns Thu 24 Sep 10:30
+function sql2human_short_day_time(dateStr) {
+  var date = sql2date(dateStr);
+  var date_str = dayNamesShort[date.getDay()] + " " + date.getDate() + " " + monthNamesShort[date.getMonth()];
+  if(strip_date(dateStr) && strip_date(dateStr) != '00:00:00') date_str = date_str + ' ' + zero_pad(date.getHours()) + ":" + zero_pad(date.getMinutes());
+  return date_str;
+}
+
+// returns 10:30
+function sql2human_short_time(dateStr) {
+  var date = sql2date(dateStr);
+  return zero_pad(date.getHours()) + ":" + zero_pad(date.getMinutes());
+}
+
+// prepends zero to day/month/hour/minute if < 10
+function zero_pad(val) {
+  var str = val.toString();
+  return str.length < 2 ? '0' + str : str;
+}
+
+// by kj
+function fixDate(dateStr) {
+  var datePat = /^(\d{4})(\/|-)(\d{1,2})(\/|-)(\d{1,2})$/;
+  var matchArray = dateStr.match(datePat); // is the format ok?
+  year = matchArray[1]; // p@rse date into variables
+  month = matchArray[3];
+  day = matchArray[5];
+  if(day.length<2)
+     day = "0" + day;
+  if(month.length<2)
+     month = "0" + month;
+  return year + "-" + month + "-" + day;
+}
+
+function sql2date(inputDate) {
+  
+  // mysql date time as YYYY-MM-DD hh:mm:ss
+  var dateTimeArray = inputDate.split(' ');
+  var dateString = dateTimeArray[0]
+  var timeString = dateTimeArray[1]
+
+  // parse the date from YYYY-MM-DD
+  var pattern = /(^\d{4})-(\d{2})-(\d{2}$)/
+  var result = dateString.match(pattern);
+
+  var year = result[1];
+  var month = result[2];
+  var day = result[3];
+    
+  var date = new Date(year, month - 1, day, 0, 0, 0)
+  
+  if(timeString) {
+    // now parse the time from HH:MM:SS
+    pattern = /(^\d{2}):(\d{2}):(\d{2})/
+    result = timeString.match(pattern);
+    
+    var hour   = result[1];
+    var minute = result[2];
+    var second = result[3];
+      
+    date.setHours(hour, minute, second);
+  }
+  
+  return date;
+}
+
+function sql2ms(dateStr) {
+  var date1 = sql2date(dateStr);
+  return date1.getTime();
+}
+
+function hours_between(datein, dateout) {
+  var one_hour = 1000 * 60 * 60;
+  return time_between(datein, dateout, one_hour);
+}
+
+function days_between(datein, dateout) {
+  var one_day = 1000 * 60 * 60 * 24;
+  return time_between(datein, dateout, one_day);
+}
+
+// todo: consider # days in month
+function months_between(datein, dateout) {
+  var one_month = 1000 * 60 * 60 * 24 * 30.41666;
+  return time_between(datein, dateout, one_month);
+}
+
+
+// returns number of units between 2 days (sql format) (e.g. days/hours/months)
+function time_between(datein, dateout, unit_in_ms) {
+  if(!unit_in_ms) unit_in_ms = 1000; // default is 1 second
+  return (sql2ms(dateout) - sql2ms(datein)) / unit_in_ms;  
+  
+  // return round_result ? Math.round(difference_ms/unit) : difference_ms/unit;
+}
+
+// jquery date(time)-picker helpers
+
+function update_timefield(fld_name) {
+  var $date = $('#' + fld_name);
+  var date = strip_time($date.val()); 
+  var time = $('#'+ fld_name + '_time').val(); 
+  //alert("updating to:" + date + " + " + time);  
+  if(date && time) { 
+    var datetime = date+ " " + time + ":00";
+    $date.val(datetime);
+  }
+}
+
+function update_dependent_datefield(source, target, num_days) {
+  var $source = $('#' + source + '_disp');
+  var $target = $('#' + target + '_disp');
+
+  var source_date = $source.datepicker("getDate");
+  var target_date = add_days(source_date, num_days);
+  //alert("source=" + source_date + " add=" + num_days + " target=" + target_date);
+  
+  $target.datepicker("option", "minDate", source_date);
+  var dep_date = $target.datepicker("getDate");
+  if(dep_date && source_date.getTime() >= dep_date.getTime()) $target.datepicker("setDate", target_date);
+}
+
+// yyyy-mm-dd hh:mm:ss => yyyy-mm-dd
+function strip_time(datetime) {
+  return datetime.substring(0, 10);
+}
+
+// yyyy-mm-dd hh:mm:ss => hh:mm:ss
+function strip_date(datetime) {
+  return datetime.substring(11);
+}
+
+// yyyy-mm-dd hh:mm:ss => hh:mm
+function strip_date_sec(datetime) {
+  var time = strip_date(datetime);
+  return time.substring(0, 5);
+}
+
+// checks if javscript Date object date1 is after date2
+function is_after(date1, date2) {
+  return time_between(date2sql(date1), date2sql(date2)) < 0;
+} 
+// end datetime.js
+
+
+// start mapiconmaker.js
+/**
+ * MapIconMaker v1.0
+ * Copyright (c) 2008 Pamela Fox
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. 
+ *
+ *
+ *  Author: Pamela Fox
+ *
+ *  This gives you static function(s) for creating dynamically sized and
+ *  colored marker icons using the Charts API marker output.
+ */
+
+var MapIconMaker = {};
+
+MapIconMaker.createMarkerIcon = function(opts) {
+  var width = opts.width || 32;
+  var height = opts.height || 32;
+  var primaryColor = opts.primaryColor || "#ff0000";
+  var strokeColor = opts.strokeColor || "#000000";
+  var cornerColor = opts.cornerColor || "#ffffff";
+   
+  var baseUrl = "http://chart.apis.google.com/chart?cht=mm";
+  var iconUrl = baseUrl + "&chs=" + width + "x" + height + 
+      "&chco=" + cornerColor.replace("#", "") + "," + primaryColor.replace("#", "") + "," + strokeColor.replace("#", "") + "&ext=.png";
+  var icon = new GIcon(G_DEFAULT_ICON);
+  icon.image = iconUrl;
+  icon.iconSize = new GSize(width, height);
+  icon.shadowSize = new GSize(Math.floor(width*1.6), height);
+  icon.iconAnchor = new GPoint(width/2, height);
+  icon.infoWindowAnchor = new GPoint(width/2, Math.floor(height/12));
+  icon.printImage = iconUrl + "&chof=gif";
+  icon.mozPrintImage = iconUrl + "&chf=bg,s,ECECD8" + "&chof=gif";
+  var iconUrl = baseUrl + "&chs=" + width + "x" + height + 
+      "&chco=" + cornerColor.replace("#", "") + "," + primaryColor.replace("#", "") + "," + strokeColor.replace("#", "");
+  icon.transparent = iconUrl + "&chf=a,s,ffffff11&ext=.png";
+
+  icon.imageMap = [
+      width/2, height,
+      (7/16)*width, (5/8)*height,
+      (5/16)*width, (7/16)*height,
+      (7/32)*width, (5/16)*height,
+      (5/16)*width, (1/8)*height,
+      (1/2)*width, 0,
+      (11/16)*width, (1/8)*height,
+      (25/32)*width, (5/16)*height,
+      (11/16)*width, (7/16)*height,
+      (9/16)*width, (5/8)*height
+  ];
+  for (var i = 0; i < icon.imageMap.length; i++) {
+    icon.imageMap[i] = parseInt(icon.imageMap[i]);
+  }
+
+  return icon;
+}
+
+// end mapiconmaker.js
+
+// start jquery/init.js
+// MSIE and Opera doesn't support CSS3 rounded corners, use jquery library curvy corners v 2.0.4
+// (auto-disabled for browsers with CSS3 border-radius support.)
+
+if(1) {
+$(document).ready(function() {
+  $('input').bind('change', function() { formChangedFlag = 'X'; });   
+  // if($.browser.msie || $.browser.opera) {
+  //   var cc_top = {
+  //     tl: { radius: 20 },
+  //     tr: { radius: 20 },
+  //     antiAlias: true
+  //   }
+  //   var cc_bottom = {
+  //     bl: { radius: 20 },
+  //     br: { radius: 20 },
+  //     antiAlias: true
+  //   }
+  //   //$('.round').corner(); 
+  //   //$('.round_top').corner(cc_top); 
+  //   //$('.round_bottom').corner(cc_bottom); 
+  // }
+});
+}
+// end jquery/init.js
+
+// new ajax function for back-end
+function save_object_dialog(parent, obj_type, form_id) {
+  var $dialog = $('#new_object_dialog');
+  var $dialog_errors = $('#new_object_dialog_errors');
+  var $dialog_messages = $('#new_object_dialog_messages');
+  var form_data_str = $('#' + form_id).serialize();
+  //ajax_url = "/admin/app_data.php?oper=add&" + form_data_str;
+  // var form_data = $('#' + form_id);
+
+  ajax_url = "/admin/app_data.php?oper=add&obj_type=" + obj_type;
+  alert(ajax_url);
+
+  jQuery.ajax({
+    type: "post",
+    data: $('#' + form_id).serialize(),
+    url: ajax_url,
+    success: function (responseText) {
+      $dialog_messages.html(responseText);
+      alert('done');
+    }
+  });
+
+  //$dialog_messages.load(ajax_url, form_data_str, function (responseText) {
+  //  alert('done');
+  //});                                    
+
+  //alert (form_data);
+  //alert("saving num_fields=" + count);
+}
+
+function new_object_dialog(parent, obj_type, title) {
+  var $dialog = $('#new_object_dialog');
+  $dialog = $dialog.length && $dialog || $('<div id="new_object_dialog"></div>').appendTo('body');  // append if doesn't exist
+  $dialog.html('Loading...');
+  $dialog.dialog({   
+   autoOpen: false,
+   closeOnEscape: false,
+   modal: true,
+   title: title,
+   width: 650,
+   height: 800,
+   //close: function(event, ui) {auto_redraw = true;$("#new_entry").hide();$("#checkin_disp").datepicker("hide");$("#checkout_disp").datepicker("hide");$("#repeat_until").datepicker("hide");}
+  });
+  $dialog.dialog('option', 'title', 'Loading...'); 
+  $dialog.dialog('open'); // jquery call to show overlay
+  ajax_url = "/admin/app_data.php?oper=new_object_dialog&obj_type=" + obj_type;
+  $dialog.load(ajax_url, function (responseText) {
+    $dialog.dialog('option', 'title', title);
+  });                                    
+}
+
+// end new ajax function for back-end
+
+
+// begin ajaxsuggest.js
+var selected_index = 0;
+var user_input = '';
+var min = 3;
+var max = 10;
+var num_suggestions = 0;
+
+
+function ajaxChooser(evt, str, fld, obj_type, filters, handler)
+{
+
+  if(window.event) { // Internet Exploder
+    key = event.keyCode;
+  } else { // compliant browser
+    key = evt.keyCode;
+  }
+  var suggestion_id   = fld + '_suggestions';
+  var spinning_image = "url(/images/icons/spinning_wheel.gif)";
+  var search_image = "url(/images/icons/suggest_bg.gif)";
+
+  var suggestion_div  = document.getElementById(suggestion_id);
+  var input_div       = document.getElementById(fld + '_textbox');
+  //var index_div       = document.getElementById(fld + '_index');
+  var value_div       = document.getElementById(fld);
+
+  vis = suggestion_div.style.display=='block' ? true : false;
+
+  //alert('table=' + table + ' sf=' + search_field + ' vf=' + value_field);
+  // count # suggestions
+  // reset all to unselected
+  // num_suggestions = 1;
+  //   tid='s_line_' + num_suggestions;
+  // while(document.getElementById(tid)) {
+  //   num_suggestions++;
+  //   tid='s_line_' + num_suggestions;
+  // }
+  // document.getElementById(index_div).value = num_suggestions - 1;
+  // //alert('# suggestions=' + num_suggestions);
+
+  // key handler
+  if(key != 8 && key < 60 && !vis) return; // don't process if suggestion is hidden and non-ascii key
+  if(key==40) { // down
+    if(++selected_index > max) selected_index=max;
+    //if(selected_index > 1) alert("max=" + max + "si=" + selected_index + " vis=" + vis);
+    return vis ? hilite2(fld, selected_index): "";
+  } else if(key==38) { // up
+    if(--selected_index<=0) { // user went up above first suggestions
+      input_div.value = user_input; // restore what user typed
+      value_div.value = '';
+      return hideSuggestions(suggestion_id);
+    } else {
+      return vis ? hilite2(fld, selected_index): "";
+    }
+  } else if(key==27) { // escape
+    return hideSuggestions(suggestion_id);
+  } else if(key==8) { // backspace
+    user_input = input_div.value; // store what user types
+    suggestion_div.innerHTML = '';
+    //index_div.value = user_input;
+    value_div.value = '';
+    // do nothing
+  } else if(key==9 || key==20) { // tab
+    //alert('tab');
+    return hideSuggestions(suggestion_id);
+  } else if(key==13) { // return
+    return hideSuggestions(suggestion_id);
+  } else if(key == 32 || key>60) { // space or ascii
+    user_input = input_div.value; // store what user types
+    //index_div.value = user_input;
+    value_div.value = '';
+    if(user_input.length >= min) showEl(suggestion_id);
+    //return;
+  } else {
+    //alert('key not handled=' + key);
+    return hideSuggestions(suggestion_id);
+  }
+
+  if(user_input.length < min) return hideSuggestions(suggestion_id);
+
+  var xmlHttp;
+  try {  // Firefox, Opera 8.0+, Safari
+    xmlHttp=new XMLHttpRequest();
+  }
+  catch (e) {  // Internet Explorer
+    try {
+      xmlHttp=new ActiveXObject("Msxml2.XMLHTTP");
+    }
+    catch (e) {
+      try {
+        xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
+      }
+        catch (e) {
+        alert("Your browser does not support AJAX!");
+        return false;
+      }
+    }
+  }
+
+  // Ajax is supported
+  xmlHttp.onreadystatechange=function()
+  {
+  if(xmlHttp.readyState==4) { // ready
+      var t = xmlHttp.responseText;     
+      input_div.style.backgroundImage = search_image; // stop spinning   
+      input_div.style.backgroundColor = '#fff';
+
+      if(document.getElementById(fld+ '_s_line_1') && !document.getElementById(fld + '_s_line_2')) { // exactly 1 suggestion
+        hideEl(suggestion_id);
+        var hit_div = document.getElementById(fld + '_s_line_1');
+        var hit = hit_div.innerHTML;
+        var hit_value = hit_div.title ? hit_div.title : hit_div.name;
+
+        //alert('one hit=' + hit);
+        input_div.value = hit;
+        value_div.value = hit_value;
+
+      } else if(t.length && user_input.length >= min) { // more than 1 suggesion
+        showEl(suggestion_id);
+        input_div.style.backgroundColor = '#fff';
+        suggestion_div.innerHTML = t;
+
+
+      } else {
+        //alert('no matches');
+        input_div.style.backgroundColor = '#faa'; // no hits
+        hideEl(suggestion_id);
+      }
+
+    } else if(xmlHttp.readyState==1) { // not ready (has been set up)
+
+      //hideSuggestions(suggestion_id);
+      input_div.style.backgroundColor = '#fff';
+      hideEl(suggestion_id);
+    }
+  }
+
+  input_div.style.backgroundImage = spinning_image; // stop spinning   
+    
+  var theurl="/home/ajax/" + handler + ".php" + "?q="+str+"&target="+fld+"&obj_type="+obj_type;
+  if(filters) theurl = theurl + "&filters="+filters;
+  xmlHttp.open("GET",theurl,true);
+  xmlHttp.send(null);
+}
+
+function ajaxChooserOld(evt, str, fld, table, search_field, value_field, filters, handler)
+{
+
+  if(window.event) { // Internet Exploder
+    key = event.keyCode;
+  } else { // compliant browser
+    key = evt.keyCode;
+  }
+  var suggestion_id   = fld + '_suggestions';
+  var spinning_image = "url(/images/icons/spinning_wheel.gif)";
+  var search_image = "url(/images/icons/suggest_bg.gif)";
+
+  var suggestion_div  = document.getElementById(suggestion_id);
+  var input_div       = document.getElementById(fld + '_textbox');
+  //var index_div       = document.getElementById(fld + '_index');
+  var value_div       = document.getElementById(fld);
+
+  vis = suggestion_div.style.display=='block' ? true : false;
+
+  //alert('table=' + table + ' sf=' + search_field + ' vf=' + value_field);
+  // count # suggestions
+  // reset all to unselected
+  // num_suggestions = 1;
+  //   tid='s_line_' + num_suggestions;
+  // while(document.getElementById(tid)) {
+  //   num_suggestions++;
+  //   tid='s_line_' + num_suggestions;
+  // }
+  // document.getElementById(index_div).value = num_suggestions - 1;
+  // //alert('# suggestions=' + num_suggestions);
+
+  // key handler
+  if(key != 8 && key < 60 && !vis) return; // don't process if suggestion is hidden and non-ascii key
+  if(key==40) { // down
+    if(++selected_index > max) selected_index=max;
+    //if(selected_index > 1) alert("max=" + max + "si=" + selected_index + " vis=" + vis);
+    return vis ? hilite2(fld, selected_index): "";
+  } else if(key==38) { // up
+    if(--selected_index<=0) { // user went up above first suggestions
+      input_div.value = user_input; // restore what user typed
+      value_div.value = '';
+      return hideSuggestions(suggestion_id);
+    } else {
+      return vis ? hilite2(fld, selected_index): "";
+    }
+  } else if(key==27) { // escape
+    return hideSuggestions(suggestion_id);
+  } else if(key==8) { // backspace
+    user_input = input_div.value; // store what user types
+    suggestion_div.innerHTML = '';
+    //index_div.value = user_input;
+    value_div.value = '';
+    // do nothing
+  } else if(key==9 || key==20) { // tab
+    //alert('tab');
+    return hideSuggestions(suggestion_id);
+  } else if(key==13) { // return
+    return hideSuggestions(suggestion_id);
+  } else if(key == 32 || key>60) { // space or ascii
+    user_input = input_div.value; // store what user types
+    //index_div.value = user_input;
+    value_div.value = '';
+    if(user_input.length >= min) showEl(suggestion_id);
+    //return;
+  } else {
+    //alert('key not handled=' + key);
+    return hideSuggestions(suggestion_id);
+  }
+
+  if(user_input.length < min) return hideSuggestions(suggestion_id);
+
+  var xmlHttp;
+  try {  // Firefox, Opera 8.0+, Safari
+    xmlHttp=new XMLHttpRequest();
+  }
+  catch (e) {  // Internet Explorer
+    try {
+      xmlHttp=new ActiveXObject("Msxml2.XMLHTTP");
+    }
+    catch (e) {
+      try {
+        xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
+      }
+        catch (e) {
+        alert("Your browser does not support AJAX!");
+        return false;
+      }
+    }
+  }
+
+  // Ajax is supported
+  xmlHttp.onreadystatechange=function()
+  {
+  if(xmlHttp.readyState==4) { // ready
+      var t = xmlHttp.responseText;     
+      input_div.style.backgroundImage = search_image; // stop spinning   
+      input_div.style.backgroundColor = '#fff';
+
+      if(document.getElementById(fld+ '_s_line_1') && !document.getElementById(fld + '_s_line_2')) { // exactly 1 suggestion
+        hideEl(suggestion_id);
+        var hit_div = document.getElementById(fld + '_s_line_1');
+        var hit = hit_div.innerHTML;
+        var hit_value = hit_div.title ? hit_div.title : hit_div.name;
+
+        //alert('one hit=' + hit);
+        input_div.value = hit;
+        value_div.value = hit_value;
+
+      } else if(t.length && user_input.length >= min) { // more than 1 suggesion
+        showEl(suggestion_id);
+        input_div.style.backgroundColor = '#fff';
+        suggestion_div.innerHTML = t;
+
+
+      } else {
+        //alert('no matches');
+        input_div.style.backgroundColor = '#faa'; // no hits
+        hideEl(suggestion_id);
+      }
+
+    } else if(xmlHttp.readyState==1) { // not ready (has been set up)
+
+      //hideSuggestions(suggestion_id);
+      input_div.style.backgroundColor = '#fff';
+      hideEl(suggestion_id);
+    }
+  }
+
+  input_div.style.backgroundImage = spinning_image; // stop spinning   
+    
+  var theurl="/home/ajax/" + handler + ".php";
+
+  theurl=theurl+"?q="+str+"&target="+fld+"&table="+table+"&sf="+search_field+"&vf="+value_field;
+
+  if(filters) theurl = theurl + "&filters="+filters;
+  xmlHttp.open("GET",theurl,true);
+  xmlHttp.send(null);
+}
+
+
+function hilite2(fld, sel_index) {  
+
+  // reset all to unselected
+  for(i=1;i<11;i++) {
+    var tid = fld + '_s_line_'+i;
+    var el =  document.getElementById(tid);
+    if(el) {
+      el.style.background= "#fff";
+      el.style.color = "#000";
+    }
+  }
+
+  // hilite selected index
+  var elid = fld + '_s_line_' + sel_index;
+  var el =  document.getElementById(elid);
+  if(el) {
+    
+    var geourl = el.title ? el.title : el.name; // title sup. by mozilla, name by IE
+    var input_div = fld + '_textbox';
+
+    // writes to the 3 boxes; text input, id, index
+    document.getElementById(input_div).value = el.innerHTML;
+    document.getElementById(fld).value = geourl;
+
+    selected_index = sel_index;
+    el.style.background= "#00a";
+    el.style.color = "#fff";
+  }
+}
+
+function hideSuggestions(fld) {
+  selected_index = 0;
+  document.getElementById(fld).innerHTML = '';
+  hideEl(fld);
+}
+
+// end ajaxsuggest.js
+
+// begin jquery/tooltip.js
+/*
+ * jQuery Tooltip plugin 1.3
+ *
+ * http://bassistance.de/jquery-plugins/jquery-plugin-tooltip/
+ * http://docs.jquery.com/Plugins/Tooltip
+ *
+ * Copyright (c) 2006 - 2008 Jörn Zaefferer
+ *
+ * $Id: jquery.tooltip.js 5741 2008-06-21 15:22:16Z joern.zaefferer $
+ * 
+ * Dual licensed under the MIT and GPL licenses:
+ *   http://www.opensource.org/licenses/mit-license.php
+ *   http://www.gnu.org/licenses/gpl.html
+ */
+ 
+;(function($) {
+	
+		// the tooltip element
+	var helper = {},
+		// the current tooltipped element
+		current,
+		// the title of the current element, used for restoring
+		title,
+		// timeout id for delayed tooltips
+		tID,
+		// IE 5.5 or 6
+		IE = $.browser.msie && /MSIE\s(5\.5|6\.)/.test(navigator.userAgent),
+		// flag for mouse tracking
+		track = false;
+	
+	$.tooltip = {
+		blocked: false,
+		defaults: {
+			delay: 200,
+			fade: false,
+			showURL: true,
+			extraClass: "",
+			top: 15,
+			left: 15,
+			id: "tooltip"
+		},
+		block: function() {
+			$.tooltip.blocked = !$.tooltip.blocked;
+		}
+	};
+	
+	$.fn.extend({
+		tooltip: function(settings) {
+			settings = $.extend({}, $.tooltip.defaults, settings);
+			createHelper(settings);
+			return this.each(function() {
+					$.data(this, "tooltip", settings);
+					this.tOpacity = helper.parent.css("opacity");
+					// copy tooltip into its own expando and remove the title
+					this.tooltipText = this.title;
+					$(this).removeAttr("title");
+					// also remove alt attribute to prevent default tooltip in IE
+					this.alt = "";
+				})
+				.mouseover(save)
+				.mouseout(hide)
+				.click(hide);
+		},
+		fixPNG: IE ? function() {
+			return this.each(function () {
+				var image = $(this).css('backgroundImage');
+				if (image.match(/^url\(["']?(.*\.png)["']?\)$/i)) {
+					image = RegExp.$1;
+					$(this).css({
+						'backgroundImage': 'none',
+						'filter': "progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled=true, sizingMethod=crop, src='" + image + "')"
+					}).each(function () {
+						var position = $(this).css('position');
+						if (position != 'absolute' && position != 'relative')
+							$(this).css('position', 'relative');
+					});
+				}
+			});
+		} : function() { return this; },
+		unfixPNG: IE ? function() {
+			return this.each(function () {
+				$(this).css({'filter': '', backgroundImage: ''});
+			});
+		} : function() { return this; },
+		hideWhenEmpty: function() {
+			return this.each(function() {
+				$(this)[ $(this).html() ? "show" : "hide" ]();
+			});
+		},
+		url: function() {
+			return this.attr('href') || this.attr('src');
+		}
+	});
+	
+	function createHelper(settings) {
+		// there can be only one tooltip helper
+		if( helper.parent )
+			return;
+		// create the helper, h3 for title, div for url
+		helper.parent = $('<div id="' + settings.id + '"><h3></h3><div class="body"></div><div class="url"></div></div>')
+			// add to document
+			.appendTo(document.body)
+			// hide it at first
+			.hide();
+			
+		// apply bgiframe if available
+		if ( $.fn.bgiframe )
+			helper.parent.bgiframe();
+		
+		// save references to title and url elements
+		helper.title = $('h3', helper.parent);
+		helper.body = $('div.body', helper.parent);
+		helper.url = $('div.url', helper.parent);
+	}
+	
+	function settings(element) {
+		return $.data(element, "tooltip");
+	}
+	
+	// main event handler to start showing tooltips
+	function handle(event) {
+		// show helper, either with timeout or on instant
+		if( settings(this).delay )
+			tID = setTimeout(show, settings(this).delay);
+		else
+			show();
+		
+		// if selected, update the helper position when the mouse moves
+		track = !!settings(this).track;
+		$(document.body).bind('mousemove', update);
+			
+		// update at least once
+		update(event);
+	}
+	
+	// save elements title before the tooltip is displayed
+	function save() {
+		// if this is the current source, or it has no title (occurs with click event), stop
+		if ( $.tooltip.blocked || this == current || (!this.tooltipText && !settings(this).bodyHandler) )
+			return;
+
+		// save current
+		current = this;
+		title = this.tooltipText;
+		
+		if ( settings(this).bodyHandler ) {
+			helper.title.hide();
+			var bodyContent = settings(this).bodyHandler.call(this);
+			if (bodyContent.nodeType || bodyContent.jquery) {
+				helper.body.empty().append(bodyContent)
+			} else {
+				helper.body.html( bodyContent );
+			}
+			helper.body.show();
+		} else if ( settings(this).showBody ) {
+			var parts = title.split(settings(this).showBody);
+			helper.title.html(parts.shift()).show();
+			helper.body.empty();
+			for(var i = 0, part; (part = parts[i]); i++) {
+				if(i > 0)
+					helper.body.append("<br/>");
+				helper.body.append(part);
+			}
+			helper.body.hideWhenEmpty();
+		} else {
+			helper.title.html(title).show();
+			helper.body.hide();
+		}
+		
+		// if element has href or src, add and show it, otherwise hide it
+		if( settings(this).showURL && $(this).url() )
+			helper.url.html( $(this).url().replace('http://', '') ).show();
+		else 
+			helper.url.hide();
+		
+		// add an optional class for this tip
+		helper.parent.addClass(settings(this).extraClass);
+
+		// fix PNG background for IE
+		if (settings(this).fixPNG )
+			helper.parent.fixPNG();
+			
+		handle.apply(this, arguments);
+	}
+	
+	// delete timeout and show helper
+	function show() {
+		tID = null;
+		if ((!IE || !$.fn.bgiframe) && settings(current).fade) {
+			if (helper.parent.is(":animated"))
+				helper.parent.stop().show().fadeTo(settings(current).fade, current.tOpacity);
+			else
+				helper.parent.is(':visible') ? helper.parent.fadeTo(settings(current).fade, current.tOpacity) : helper.parent.fadeIn(settings(current).fade);
+		} else {
+			helper.parent.show();
+		}
+		update();
+	}
+	
+	/**
+	 * callback for mousemove
+	 * updates the helper position
+	 * removes itself when no current element
+	 */
+	function update(event)	{
+		if($.tooltip.blocked)
+			return;
+		
+		if (event && event.target.tagName == "OPTION") {
+			return;
+		}
+		
+		// stop updating when tracking is disabled and the tooltip is visible
+		if ( !track && helper.parent.is(":visible")) {
+			$(document.body).unbind('mousemove', update)
+		}
+		
+		// if no current element is available, remove this listener
+		if( current == null ) {
+			$(document.body).unbind('mousemove', update);
+			return;	
+		}
+		
+		// remove position helper classes
+		helper.parent.removeClass("viewport-right").removeClass("viewport-bottom");
+		
+		var left = helper.parent[0].offsetLeft;
+		var top = helper.parent[0].offsetTop;
+		if (event) {
+			// position the helper 15 pixel to bottom right, starting from mouse position
+			left = event.pageX + settings(current).left;
+			top = event.pageY + settings(current).top;
+			var right='auto';
+			if (settings(current).positionLeft) {
+				right = $(window).width() - left;
+				left = 'auto';
+			}
+			helper.parent.css({
+				left: left,
+				right: right,
+				top: top
+			});
+		}
+		
+		var v = viewport(),
+			h = helper.parent[0];
+		// check horizontal position
+		if (v.x + v.cx < h.offsetLeft + h.offsetWidth) {
+			left -= h.offsetWidth + 20 + settings(current).left;
+			helper.parent.css({left: left + 'px'}).addClass("viewport-right");
+		}
+		// check vertical position
+		if (v.y + v.cy < h.offsetTop + h.offsetHeight) {
+			top -= h.offsetHeight + 20 + settings(current).top;
+			helper.parent.css({top: top + 'px'}).addClass("viewport-bottom");
+		}
+	}
+	
+	function viewport() {
+		return {
+			x: $(window).scrollLeft(),
+			y: $(window).scrollTop(),
+			cx: $(window).width(),
+			cy: $(window).height()
+		};
+	}
+	
+	// hide helper and restore added classes and the title
+	function hide(event) {
+		if($.tooltip.blocked)
+			return;
+		// clear timeout if possible
+		if(tID)
+			clearTimeout(tID);
+		// no more current element
+		current = null;
+		
+		var tsettings = settings(this);
+		function complete() {
+			helper.parent.removeClass( tsettings.extraClass ).hide().css("opacity", "");
+		}
+		if ((!IE || !$.fn.bgiframe) && tsettings.fade) {
+			if (helper.parent.is(':animated'))
+				helper.parent.stop().fadeTo(tsettings.fade, 0, complete);
+			else
+				helper.parent.stop().fadeOut(tsettings.fade, complete);
+		} else
+			complete();
+		
+		if( settings(this).fixPNG )
+			helper.parent.unfixPNG();
+	}
+	
+})(jQuery);
+
+// end jquery/tooltip.js
+
+// jquery/timepicker.js
+/*
+ * A time picker for jQuery
+ * Based on original timePicker by Sam Collet (http://www.texotela.co.uk) -
+ * copyright (c) 2006 Sam Collett (http://www.texotela.co.uk)
+ *
+ * Dual licensed under the MIT and GPL licenses.
+ * Copyright (c) 2009 Anders Fajerson
+ * @name     timePicker
+ * @version  0.2
+ * @author   Anders Fajerson (http://perifer.se)
+ * @example  $("#mytime").timePicker();
+ * @example  $("#mytime").timePicker({step:30, startTime:"15:00", endTime:"18:00"});
+ */
+
+(function($){
+  $.fn.timePicker = function(options) {
+    // Build main options before element iteration
+    var settings = $.extend({}, $.fn.timePicker.defaults, options);
+
+    return this.each(function() {
+      $.timePicker(this, settings);
+    });
+  };
+
+  $.timePicker = function (elm, settings) {
+    var e = $(elm)[0];
+    return e.timePicker || (e.timePicker = new jQuery._timePicker(e, settings));
+  };
+
+  $._timePicker = function(elm, settings) {
+
+    var tpOver = false;
+    var keyDown = false;
+    var startTime = timeToDate(settings.startTime, settings);
+    var endTime = timeToDate(settings.endTime, settings);
+
+    $(elm).attr('autocomplete', 'OFF'); // Disable browser autocomplete
+
+    var times = [];
+    var time = new Date(startTime); // Create a new date object.
+    while(time <= endTime) {
+      times[times.length] = formatTime(time, settings);
+      time = new Date(time.setMinutes(time.getMinutes() + settings.step));
+    }
+
+    var $tpDiv = $('<div class="time-picker'+ (settings.show24Hours ? '' : ' time-picker-12hours') +'"></div>');
+    var $tpList = $('<ul></ul>');
+
+    // Build the list.
+    for(var i = 0; i < times.length; i++) {
+      $tpList.append("<li>" + times[i] + "</li>");
+    }
+    $tpDiv.append($tpList);
+    // Append the timPicker to the body and position it.
+    var elmOffset = $(elm).offset();
+
+    //$tpDiv.appendTo('body').css({'top':elmOffset.top, 'left':elmOffset.left}).hide(); // uncomment by kjetil
+
+    // by kjetil - append to target element instead of body, or won't work with modal dialog
+    $(elm).wrap("<span class='relative'></span>");
+//    $tpDiv.insertAfter(elm).css({'position': 'absolute', 'top': 15, 'left':elmOffset.left}).hide();
+    $tpDiv.insertAfter(elm).css({'position': 'absolute', 'top': 15, 'left':0}).hide();
+    // end by kjetil
+    
+    // Store the mouse state, used by the blur event. Use mouseover instead of
+    // mousedown since Opera fires blur before mousedown.
+    $tpDiv.mouseover(function() {
+      tpOver = true;
+    }).mouseout(function() {
+      tpOver = false;
+    });
+
+    $("li", $tpList).mouseover(function() {
+      if (!keyDown) {
+        $("li.selected", $tpDiv).removeClass("selected");
+        $(this).addClass("selected");
+      }
+    }).mousedown(function() {
+       tpOver = true;
+    }).click(function() {
+      setTimeVal(elm, this, $tpDiv, settings);
+      tpOver = false;
+    });
+
+    var showPicker = function() {
+      if ($tpDiv.is(":visible")) {
+        return false;
+      }
+      $("li", $tpDiv).removeClass("selected");
+
+      // Show picker. This has to be done before scrollTop is set since that
+      // can't be done on hidden elements.
+      $tpDiv.show();
+
+      // Try to find a time in the list that matches the entered time.
+      var time = elm.value ? timeStringToDate(elm.value, settings) : startTime;
+      var startMin = startTime.getHours() * 60 + startTime.getMinutes();
+      var min = (time.getHours() * 60 + time.getMinutes()) - startMin;
+      var steps = Math.round(min / settings.step);
+      var roundTime = normaliseTime(new Date(0, 0, 0, 0, (steps * settings.step + startMin), 0));
+      roundTime = (startTime < roundTime && roundTime <= endTime) ? roundTime : startTime;
+      var $matchedTime = $("li:contains(" + formatTime(roundTime, settings) + ")", $tpDiv);
+
+      if ($matchedTime.length) {
+        $matchedTime.addClass("selected");
+        // Scroll to matched time.
+        $tpDiv[0].scrollTop = $matchedTime[0].offsetTop;
+      }
+      return true;
+    };
+    // Attach to click as well as focus so timePicker can be shown again when
+    // clicking on the input when it already has focus.
+    $(elm).focus(showPicker).click(showPicker);
+    // Hide timepicker on blur
+    $(elm).blur(function() {
+      if (!tpOver) {
+        $tpDiv.hide();
+      }
+    });
+    // Keypress doesn't repeat on Safari for non-text keys.
+    // Keydown doesn't repeat on Firefox and Opera on Mac.
+    // Using kepress for Opera and Firefox and keydown for the rest seems to
+    // work with up/down/enter/esc.
+    var event = ($.browser.opera || $.browser.mozilla) ? 'keypress' : 'keydown';
+    $(elm)[event](function(e) {
+      var $selected;
+      keyDown = true;
+      var top = $tpDiv[0].scrollTop;
+      switch (e.keyCode) {
+        case 38: // Up arrow.
+          // Just show picker if it's hidden.
+          if (showPicker()) {
+            return false;
+          };
+          $selected = $("li.selected", $tpList);
+          var prev = $selected.prev().addClass("selected")[0];
+          if (prev) {
+            $selected.removeClass("selected");
+            // Scroll item into view.
+            if (prev.offsetTop < top) {
+              $tpDiv[0].scrollTop = top - prev.offsetHeight;
+            }
+          }
+          else {
+            // Loop to next item.
+            $selected.removeClass("selected");
+            prev = $("li:last", $tpList).addClass("selected")[0];
+            $tpDiv[0].scrollTop = prev.offsetTop - prev.offsetHeight;
+          }
+          return false;
+          break;
+        case 40: // Down arrow, similar in behaviour to up arrow.
+          if (showPicker()) {
+            return false;
+          };
+          $selected = $("li.selected", $tpList);
+          var next = $selected.next().addClass("selected")[0];
+          if (next) {
+            $selected.removeClass("selected");
+            if (next.offsetTop + next.offsetHeight > top + $tpDiv[0].offsetHeight) {
+              $tpDiv[0].scrollTop = top + next.offsetHeight;
+            }
+          }
+          else {
+            $selected.removeClass("selected");
+            next = $("li:first", $tpList).addClass("selected")[0];
+            $tpDiv[0].scrollTop = 0;
+          }
+          return false;
+          break;
+        case 13: // Enter
+          if ($tpDiv.is(":visible")) {
+            var sel = $("li.selected", $tpList)[0];
+            setTimeVal(elm, sel, $tpDiv, settings);
+          }
+          return false;
+          break;
+        case 27: // Esc
+          $tpDiv.hide();
+          return false;
+          break;
+      }
+      return true;
+    });
+    $(elm).keyup(function(e) {
+      keyDown = false;
+    });
+    // Helper function to get an inputs current time as Date object.
+    // Returns a Date object.
+    this.getTime = function() {
+      return timeStringToDate(elm.value, settings);
+    };
+    // Helper function to set a time input.
+    // Takes a Date object.
+    this.setTime = function(time) {
+      elm.value = formatTime(normaliseTime(time), settings);
+      // Trigger element's change events.
+      $(elm).change();
+    };
+
+  }; // End fn;
+
+  // Plugin defaults.
+  $.fn.timePicker.defaults = {
+    step:30,
+    startTime: new Date(0, 0, 0, 0, 0, 0),
+    endTime: new Date(0, 0, 0, 23, 30, 0),
+    separator: ':',
+    show24Hours: true
+  };
+
+  // Private functions.
+
+  function setTimeVal(elm, sel, $tpDiv, settings) {
+    // Update input field
+    elm.value = $(sel).text();
+    // Trigger element's change events.
+    $(elm).change();
+    // Keep focus for all but IE (which doesn't like it)
+    if (!$.browser.msie) {
+      elm.focus();
+    }
+    // Hide picker
+    $tpDiv.hide();
+  }
+
+  function formatTime(time, settings) {
+    var h = time.getHours();
+    var hours = settings.show24Hours ? h : (((h + 11) % 12) + 1);
+    var minutes = time.getMinutes();
+    return formatNumber(hours) + settings.separator + formatNumber(minutes) + (settings.show24Hours ? '' : ((h < 12) ? ' AM' : ' PM'));
+  }
+
+  function formatNumber(value) {
+    return (value < 10 ? '0' : '') + value;
+  }
+
+  function timeToDate(input, settings) {
+    return (typeof input == 'object') ? normaliseTime(input) : timeStringToDate(input, settings);
+  }
+
+  function timeStringToDate(input, settings) {
+    if (input) {
+      var array = input.split(settings.separator);
+      var hours = parseFloat(array[0]);
+      var minutes = parseFloat(array[1]);
+
+      // Convert AM/PM hour to 24-hour format.
+      if (!settings.show24Hours) {
+        if (hours === 12 && input.substr('AM') !== -1) {
+          hours = 0;
+        }
+        else if (hours !== 12 && input.indexOf('PM') !== -1) {
+          hours += 12;
+        }
+      }
+      var time = new Date(0, 0, 0, hours, minutes, 0);
+      return normaliseTime(time);
+    }
+    return null;
+  }
+
+  /* Normalise time object to a common date. */
+  function normaliseTime(time) {
+    time.setFullYear(2001);
+    time.setMonth(0);
+    time.setDate(0);
+    return time;
+  }
+
+})(jQuery);
+
+
+// end jquery/timepicker.js
+
+// begin searchbar.js
+
+// removed from now - didn't validate
+// end searchbar.js
+
+// start googlemap.js
+// used to load big map with markers (either apartments or geo locations)
+function loadMap2(mapid, markers) {
+  var i=0;
+  if(GBrowserIsCompatible()) {
+    var mapel = document.getElementById(mapid);
+    var map = new GMap2(mapel);
+    map.addControl(new GSmallMapControl());
+    map.addControl(new GMapTypeControl());
+    map.setCenter(new GLatLng(0,0), 13);
+  } else {
+    alert('Your browser is unfortunately not supported by Google Maps');
+  }
+
+  if(maxzoom) { // for short-term apartments, disable full zoom ?>
+    GEvent.addListener(map, "zoomend", function (prevlevel, newlevel) {
+      if(newlevel > maxzoom) map.setZoom(prevlevel);
+   });
+  }
+      
+  var num_markers = markers.length;
+  if(num_markers) {
+    var min_latitude=1000;
+    var max_latitude=-1000;
+    var min_longitude=1000;
+    var max_longitude=-1000;
+  
+    for (var i in markers) { // iterate through markers
+      var marker = markers[i];
+      var name = marker.name;
+      var latitude = marker.latitude;
+      var longitude = marker.longitude;
+      var point = new GLatLng(latitude,longitude);
+      var tabs = marker.tabs;
+      var accuracy = marker.accuracy;
+      
+      var thelink = marker.link;
+      var thelink = thelink.replace(/\&amp;/g,'&'); // remove encoding
+      var selected = 0;
+    
+      var infoTabs = [];
+
+      if(tabs.length) {        
+        var infoTabs = [];              
+        for (var j in tabs) { // iterate through tabs
+          var tab = tabs[j]; 
+          infoTabs[j] = new GInfoWindowTab(tab[0], tab[1]);
+        }
+        var gmarker = createMarker2(point, infoTabs, thelink);
+      } else {
+        var gmarker = createMarker3(point, name, thelink, marker.level);
+      }
+    
+      map.addOverlay(gmarker);
+      if(selected) gmarker.openInfoWindowTabsHtml(infoTabs);
+  
+      if(latitude && latitude < min_latitude) min_latitude=latitude;
+      if(latitude && latitude > max_latitude) max_latitude=latitude;
+      if(longitude && longitude < min_longitude) min_longitude=longitude;
+      if(longitude && longitude > max_longitude) max_longitude=longitude;
+    
+      //alert("Marker " + i + ": latitude: " + latitude + " longitude: " + longitude + " acc: " + accuracy + " name: " + name + " link:" + thelink);
+      //alert("min latitude: " + min_latitude + "max latitude: " + max_latitude + "min longitude: " + min_longitude + "max longitude: " + max_longitude + "avg latitude: " + avg_latitude + "avg longitude: " + avg_longitude);
+
+    }
+
+    // add 10% in x and y
+    var diffX = max_longitude-min_longitude;
+    var diffY = max_latitude-min_latitude;
+    var factor = 0.1;
+    var xFactor=diffX*factor;
+    var yFactor=diffY*factor;
+
+    min_longitude -= xFactor;
+    min_latitude  -= yFactor;
+    max_longitude += xFactor;
+    max_latitude  += yFactor;
+    
+    var avg_longitude = (min_longitude + max_longitude) / 2;
+    var avg_latitude = (min_latitude + max_latitude) / 2;
+  }
+
+  // set center and zoom
+  if(num_markers > 1) { 
+    var sw = new GLatLng(min_latitude,min_longitude);
+    var ne = new GLatLng(max_latitude,max_longitude);
+    var avg = new GLatLng(avg_latitude,avg_longitude);
+    var bounds = new GLatLngBounds(sw, ne);
+    var zoomLevel = map.getBoundsZoomLevel(bounds);
+    map.setZoom(zoomLevel);
+    map.setCenter(bounds.getCenter());
+    //alert('min=min_latitude max=max_longitude many markers: num_markers acc=thisLoc->location_accuracy zoom level ='+zoomLevel);
+    map.setCenter(avg);
+
+    var polyline = new GPolyline([
+      new GLatLng(min_latitude,min_longitude),
+      new GLatLng(min_latitude,max_longitude),
+      new GLatLng(max_latitude,max_longitude),
+      new GLatLng(max_latitude,min_longitude),
+      new GLatLng(min_latitude,min_longitude)
+    ], "#ff0000", 2);
+    //map.addOverlay(polyline);
+  } else if(num_markers==1) { 
+    map.setCenter(new GLatLng(latitude,longitude), zoomLevel);
+    var zoomLevel = acc2zoom(accuracy);
+    map.setZoom(zoomLevel);
+    //alert('one markers: num_markers acc=thisLoc->location_accuracy zoom level ='+zoomLevel);
+  } else { 
+    // use parent location and zoom
+    var zoomLevel = acc2zoom(accuracy);
+    //alert('no markers: num_markers acc=thisLoc->location_accuracy zoom level ='+zoomLevel);
+    map.setCenter(new GLatLng(latitude,longitude), zoomLevel);
+  } 
+
+  //alert("min latitude: " + min_latitude + "max latitude: " + max_latitude + "min longitude: " + min_longitude + "max longitude: " + max_longitude + "avg latitude: " + avg_latitude + "avg longitude: " + avg_longitude);
+  
+  // calculatitudee bounds of markers
+  //var zoom2 = acc2zoom(<?=$thisLoc->location_accuracy?>);
+  
+}  
+
+
+// load little map
+function loadMap(mid, latitude, longitude, accuracy, setmarker) {
+  if (GBrowserIsCompatible()) {
+
+    var map = new GMap2(document.getElementById(mid));
+    map.enableContinuousZoom();
+        
+    var zoomlevel=0;
+    zoomlevel = acc2zoom(accuracy);
+      
+    map.addControl(new GSmallMapControl());
+    map.addControl(new GMapTypeControl());
+    map.setCenter(new GLatLng(latitude,longitude), zoomlevel);
+    map.checkResize();
+  }
+  var point = new GLatLng(latitude,longitude);
+  var icon_short = null;
+
+  var themarker = createMarker4(map, point, icon_short, setmarker);
+  var markers = [];
+  markers.push(themarker);
+
+  var mgrOptions = {maxZoom : 5};
+
+  if(maxzoom) { // for short-term apartments, disable full zoom 
+    GEvent.addListener(map, "zoomend", function (prevlevel, newlevel) {
+      if(newlevel > maxzoom) map.setZoom(prevlevel);
+    });
+  } 
+
+  if(setmarker) {
+    GEvent.addListener(themarker, "dragstart", function() {
+      //map.closeInfoWindow();
+    });
+    
+    GEvent.addListener(themarker, "dragend", function() {
+      mpoint = themarker.getPoint();
+      document.getElementById('gmap_cont_latitude').value = mpoint.y;
+      document.getElementById('gmap_cont_longitude').value = mpoint.x;
+      map.zoomIn();
+      map.zoomIn();
+      map.panTo(mpoint);
+      var zoomlevel = map.getZoom();      
+      document.getElementById('gmap_cont_accuracy').value = zoom2acc(zoomlevel);
+    });
+
+    GEvent.addListener(map, "click", function(marker, point) {
+      if (marker) {
+        marker.setPoint(point);
+      } else {
+        themarker.setPoint(point);
+        map.panTo(point);
+        var zoomlevel = map.getZoom();
+        document.getElementById('gmap_cont_accuracy').value = zoom2acc(zoomlevel);
+        document.getElementById('gmap_cont_latitude').value = point.y;
+        document.getElementById('gmap_cont_longitude').value = point.x;
+      }
+    });
+
+  }
+  map.addOverlay(themarker);
+  map.checkResize();
+  return map;
+}
+
+// set values of edit-map
+function get_object_map(latitude, longitude, accuracy) {
+  $('#gmap_cont_accuracy').val(accuracy); 
+  $('#gmap_cont_latitude').val(latitude); 
+  $('#gmap_cont_longitude').val(longitude);
+}
+
+// copy values from edit-map back to record
+function set_object_map(obj_table) {
+  var accuracy = $('#gmap_cont_accuracy').val(); 
+  var latitude = $('#gmap_cont_latitude').val(); 
+  var longitude = $('#gmap_cont_longitude').val();
+  
+  $('#'+obj_table+'-location_accuracy').val(accuracy); 
+  $('#'+obj_table+'-location_lat').val(latitude); 
+  $('#'+obj_table+'-location_long').val(longitude);
+}
+
+function showMap(parent_id, latitude, longitude, accuracy) {
+  $cont = $('#gmap_cont');
+  $map = $('#gmap');
+  $parent = $('#' + parent_id);  
+  $cont.show();
+  $map.show();
+  $cont.position({of: $parent, my: 'top left', at: 'top left',});
+  loadMap('gmap', latitude, longitude, accuracy, false);
+}
+
+function showMapEdit(parent_id, latitude, longitude, accuracy) {
+	get_object_map(latitude, longitude, accuracy);
+  $cont = $('#gmap_cont_edit');
+  $map = $('#gmap_edit');
+  $parent = $('#' + parent_id);  
+  $cont.show();
+  $map.show();  
+  $cont.position({of: $parent, my: 'top left', at: 'top left',});
+  loadMap('gmap_edit', latitude, longitude, accuracy, true);  
+}
+
+
+function createMarker2(point, infoTabs, thelink) {
+  var marker = new GMarker(point);
+  GEvent.addListener(marker, "mouseover", function() {
+    marker.openInfoWindowTabsHtml(infoTabs);
+  });
+  GEvent.addListener(marker, "click", function() {
+    document.location=thelink;
+  });
+  return marker;
+}
+
+function createMarker3(point, infoHTML, thelink, level) {
+
+  var scale = (8-level)*2;
+  var iconOptions = {};
+  iconOptions.width = 16+scale;
+  iconOptions.height = 16+scale;
+  iconOptions.primaryColor = "#F7BF01";
+  iconOptions.cornerColor = "#3E78A6";
+  iconOptions.strokeColor = "#000000";
+  var cIcon = MapIconMaker.createMarkerIcon(iconOptions);
+
+    // Create our "tiny" marker icon
+  var blueIcon = new GIcon(G_DEFAULT_ICON);
+  blueIcon.image = "http://www.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
+
+  // Set up our GMarkerOptions object
+  markerOptions = {};
+  markerOptions.icon = cIcon;
+  markerOptions.title = infoHTML;
+
+  var marker = new GMarker(point, markerOptions);
+
+  //GEvent.addListener(marker, "mouseover", function() {
+  //  marker.openInfoWindowHtml(infoHTML);
+  //});
+  GEvent.addListener(marker, "click", function() {
+    document.location=thelink;
+  });
+  return marker;
+}
+
+function createMarker4(map, point, marker, setmarker) {
+  if(setmarker) {
+    var marker = new GMarker(point, {draggable: true});
+  } else {
+    var marker = new GMarker(point);
+  }
+  return marker;
+}
+
+function zoom2acc(zoomlevel) {
+  if(zoomlevel<=0) return 0;
+  if(zoomlevel<=2) return 1;
+  if(zoomlevel<=4) return 2;
+  if(zoomlevel<=6) return 3;
+  if(zoomlevel<=8) return 4;
+  if(zoomlevel<=10) return 5;
+  if(zoomlevel<=12) return 6;
+  if(zoomlevel<=14) return 7;
+  return 8;
+}
+
+function acc2zoom(accuracy) {
+  if(accuracy<=0) return 0;
+  if(accuracy==1) return 1;
+  if(accuracy==2) return 6;
+  if(accuracy==3) return 7;
+  if(accuracy==4) return 8;
+  if(accuracy==5) return 9;
+  if(accuracy==6) return 10;
+  if(accuracy==7) return 11;
+  return 13;
+}
+// end googlemap.js
+
+// start request.js
+function update_pickup(checkin) {
+  var $checkbox = $('#airport_pickup');
+  var too_late = false;
+  
+  //var checkin = $('#checkin').val();
+  // alert('in=' + checkin);
+  if(checkin)  {
+    var now = new Date();
+    var checkinDate = new Date(sql2date(checkin));
+    var deadline = add_days(checkinDate, -1);
+    too_late =  now > deadline;
+    
+    //if(too_late =  now > deadline) { // can't set/change pickup less than 24 hours before check-in
+    //  //alert($("#pickup_tip").attr('src'));
+    //  //alert($("#pickup_tip").attr('title'));
+    //  //$("#pickup_tip").attr({title: 'foo'});
+    //}
+    //alert("today =" + now + '<br>checkin=' + checkinDate + '<br>deadline=' + deadline + '<br>too_late=' + too_late);
+  }
+  
+  if(!too_late && $('#arrival_method').val()=='air' && $('#arrival_time_disp').val() && $('#arrival_number').val()) {
+    $checkbox.attr('disabled', false);
+  } else {
+    $checkbox.attr('disabled', true);
+  }
+}
+
+function update_pickup_fee() {
+  var checked = $('#airport_pickup').is(':checked');
+  var $fee = $('#fee_pickup');  
+  $fee.attr('disabled', (checked ? false : true));
+  update_overlay_fees(); // only works in calendar...
+}
+// end request.js
+
+// start swfobject.js
+/**
+ * SWFObject v1.4.1: Flash Player detection and embed - http://blog.deconcept.com/swfobject/
+ *
+ * SWFObject is (c) 2006 Geoff Stearns and is released under the MIT License:
+ * http://www.opensource.org/licenses/mit-license.php
+ *
+ * **SWFObject is the SWF embed script formerly known as FlashObject. The name was changed for
+ *   legal reasons.
+ */
+if(typeof deconcept=="undefined"){var deconcept=new Object();}
+if(typeof deconcept.util=="undefined"){deconcept.util=new Object();}
+if(typeof deconcept.SWFObjectUtil=="undefined"){deconcept.SWFObjectUtil=new Object();}
+deconcept.SWFObject=function(_1,id,w,h,_5,c,_7,_8,_9,_a,_b){
+if(!document.createElement||!document.getElementById){return;}
+this.DETECT_KEY=_b?_b:"detectflash";
+this.skipDetect=deconcept.util.getRequestParameter(this.DETECT_KEY);
+this.params=new Object();
+this.variables=new Object();
+this.attributes=new Array();
+if(_1){this.setAttribute("swf",_1);}
+if(id){this.setAttribute("id",id);}
+if(w){this.setAttribute("width",w);}
+if(h){this.setAttribute("height",h);}
+if(_5){this.setAttribute("version",new deconcept.PlayerVersion(_5.toString().split(".")));}
+this.installedVer=deconcept.SWFObjectUtil.getPlayerVersion(this.getAttribute("version"),_7);
+if(c){this.addParam("bgcolor",c);}
+var q=_8?_8:"high";
+this.addParam("quality",q);
+this.setAttribute("useExpressInstall",_7);
+this.setAttribute("doExpressInstall",false);
+var _d=(_9)?_9:window.location;
+this.setAttribute("xiRedirectUrl",_d);
+this.setAttribute("redirectUrl","");
+if(_a){this.setAttribute("redirectUrl",_a);}};
+deconcept.SWFObject.prototype={setAttribute:function(_e,_f){
+this.attributes[_e]=_f;
+},getAttribute:function(_10){
+return this.attributes[_10];
+},addParam:function(_11,_12){
+this.params[_11]=_12;
+},getParams:function(){
+return this.params;
+},addVariable:function(_13,_14){
+this.variables[_13]=_14;
+},getVariable:function(_15){
+return this.variables[_15];
+},getVariables:function(){
+return this.variables;
+},getVariablePairs:function(){
+var _16=new Array();
+var key;
+var _18=this.getVariables();
+for(key in _18){_16.push(key+"="+_18[key]);}
+return _16;
+},getSWFHTML:function(){
+var _19="";
+if(navigator.plugins&&navigator.mimeTypes&&navigator.mimeTypes.length){
+if(this.getAttribute("doExpressInstall")){this.addVariable("MMplayerType","PlugIn");}
+_19="<embed type=\"application/x-shockwave-flash\" src=\""+this.getAttribute("swf")+"\" width=\""+this.getAttribute("width")+"\" height=\""+this.getAttribute("height")+"\"";
+_19+=" id=\""+this.getAttribute("id")+"\" name=\""+this.getAttribute("id")+"\" ";
+var _1a=this.getParams();
+for(var key in _1a){_19+=[key]+"=\""+_1a[key]+"\" ";}
+var _1c=this.getVariablePairs().join("&");
+if(_1c.length>0){_19+="flashvars=\""+_1c+"\"";}
+_19+="/>";}else{if(this.getAttribute("doExpressInstall")){this.addVariable("MMplayerType","ActiveX");}
+_19="<object id=\""+this.getAttribute("id")+"\" classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" width=\""+this.getAttribute("width")+"\" height=\""+this.getAttribute("height")+"\">";
+_19+="<param name=\"movie\" value=\""+this.getAttribute("swf")+"\" />";
+var _1d=this.getParams();
+for(var key in _1d){_19+="<param name=\""+key+"\" value=\""+_1d[key]+"\" />";}
+var _1f=this.getVariablePairs().join("&");
+if(_1f.length>0){_19+="<param name=\"flashvars\" value=\""+_1f+"\" />";}_19+="</object>";}
+return _19;},write:function(_20){
+if(this.getAttribute("useExpressInstall")){
+var _21=new deconcept.PlayerVersion([6,0,65]);
+if(this.installedVer.versionIsValid(_21)&&!this.installedVer.versionIsValid(this.getAttribute("version"))){
+this.setAttribute("doExpressInstall",true);
+this.addVariable("MMredirectURL",escape(this.getAttribute("xiRedirectUrl")));
+document.title=document.title.slice(0,47)+" - Flash Player Installation";
+this.addVariable("MMdoctitle",document.title);}}
+if(this.skipDetect||this.getAttribute("doExpressInstall")||this.installedVer.versionIsValid(this.getAttribute("version"))){
+var n=(typeof _20=="string")?document.getElementById(_20):_20;
+n.innerHTML=this.getSWFHTML();return true;
+}else{if(this.getAttribute("redirectUrl")!=""){document.location.replace(this.getAttribute("redirectUrl"));}}return false;}};
+deconcept.SWFObjectUtil.getPlayerVersion=function(_23,_24){
+var _25=new deconcept.PlayerVersion([0,0,0]);
+if(navigator.plugins&&navigator.mimeTypes.length){
+var x=navigator.plugins["Shockwave Flash"];
+if(x&&x.description){_25=new deconcept.PlayerVersion(x.description.replace(/([a-z]|[A-Z]|\s)+/,"").replace(/(\s+r|\s+b[0-9]+)/,".").split("."));}
+}else{try{var axo=new ActiveXObject("ShockwaveFlash.ShockwaveFlash");
+for(var i=3;axo!=null;i++){axo=new ActiveXObject("ShockwaveFlash.ShockwaveFlash."+i);_25=new deconcept.PlayerVersion([i,0,0]);}}
+catch(e){}
+if(_23&&_25.major>_23.major){return _25;}
+if(!_23||((_23.minor!=0||_23.rev!=0)&&_25.major==_23.major)||_25.major!=6||_24){
+try{_25=new deconcept.PlayerVersion(axo.GetVariable("$version").split(" ")[1].split(","));}
+catch(e){}}}return _25;};
+deconcept.PlayerVersion=function(_29){
+this.major=parseInt(_29[0])!=null?parseInt(_29[0]):0;
+this.minor=parseInt(_29[1])||0;
+this.rev=parseInt(_29[2])||0;};
+deconcept.PlayerVersion.prototype.versionIsValid=function(fv){
+if(this.major<fv.major){return false;}
+if(this.major>fv.major){return true;}
+if(this.minor<fv.minor){return false;}
+if(this.minor>fv.minor){return true;}
+if(this.rev<fv.rev){return false;}return true;};
+deconcept.util={getRequestParameter:function(_2b){
+var q=document.location.search||document.location.hash;
+if(q){var _2d=q.indexOf(_2b+"=");
+var _2e=(q.indexOf("&",_2d)>-1)?q.indexOf("&",_2d):q.length;
+if(q.length>1&&_2d>-1){return q.substring(q.indexOf("=",_2d)+1,_2e);}}
+return "";}};
+deconcept.SWFObjectUtil.cleanupSWFs=function(){
+var _2f=document.getElementsByTagName("OBJECT");
+for(var i=0;i<_2f.length;i++){
+for(var x in _2f[i]){if(typeof _2f[i][x]=="function"){_2f[i][x]=null;}}}};
+if(typeof window.onunload=="function"){
+var oldunload=window.onunload;
+window.onunload=function(){deconcept.SWFObjectUtil.cleanupSWFs();oldunload();};
+}else{window.onunload=deconcept.SWFObjectUtil.cleanupSWFs;}
+if(Array.prototype.push==null){
+Array.prototype.push=function(_32){
+this[this.length]=_32;
+return this.length;};}
+
+var getQueryParamValue = deconcept.util.getRequestParameter;
+var FlashObject = deconcept.SWFObject; // for backwards compatibility
+var SWFObject = deconcept.SWFObject;
+// end swfobject.js
+
+// curvyCorners: http://www.curvycorners.net/
+var curvyCornersVerbose = false;
+function browserdetect(){var A=navigator.userAgent.toLowerCase();this.isIE=A.indexOf("msie")>-1;this.ieVer=this.isIE?/msie\s(\d\.\d)/.exec(A)[1]:0;this.isMoz=A.indexOf("firefox")!=-1;this.isSafari=A.indexOf("safari")!=-1;this.quirksMode=this.isIE&&(!document.compatMode||document.compatMode.indexOf("BackCompat")>-1);this.isOp="opera" in window;this.isWebKit=A.indexOf("webkit")!=-1;if(this.isIE){this.get_style=function(D,F){if(!(F in D.currentStyle)){return""}var C=/^([\d.]+)(\w*)/.exec(D.currentStyle[F]);if(!C){return D.currentStyle[F]}if(C[1]==0){return"0"}if(C[2]&&C[2]!=="px"){var B=D.style.left;var E=D.runtimeStyle.left;D.runtimeStyle.left=D.currentStyle.left;D.style.left=C[1]+C[2];C[0]=D.style.pixelLeft;D.style.left=B;D.runtimeStyle.left=E}return C[0]}}else{this.get_style=function(B,C){C=C.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase();return document.defaultView.getComputedStyle(B,"").getPropertyValue(C)}}}var curvyBrowser=new browserdetect;if(curvyBrowser.isIE){try{document.execCommand("BackgroundImageCache",false,true)}catch(e){}}function curvyCnrSpec(A){this.selectorText=A;this.tlR=this.trR=this.blR=this.brR=0;this.tlu=this.tru=this.blu=this.bru="";this.antiAlias=true}curvyCnrSpec.prototype.setcorner=function(B,C,A,D){if(!B){this.tlR=this.trR=this.blR=this.brR=parseInt(A);this.tlu=this.tru=this.blu=this.bru=D}else{propname=B.charAt(0)+C.charAt(0);this[propname+"R"]=parseInt(A);this[propname+"u"]=D}};curvyCnrSpec.prototype.get=function(D){if(/^(t|b)(l|r)(R|u)$/.test(D)){return this[D]}if(/^(t|b)(l|r)Ru$/.test(D)){var C=D.charAt(0)+D.charAt(1);return this[C+"R"]+this[C+"u"]}if(/^(t|b)Ru?$/.test(D)){var B=D.charAt(0);B+=this[B+"lR"]>this[B+"rR"]?"l":"r";var A=this[B+"R"];if(D.length===3&&D.charAt(2)==="u"){A+=this[B="u"]}return A}throw new Error("Don't recognize property "+D)};curvyCnrSpec.prototype.radiusdiff=function(A){if(A!=="t"&&A!=="b"){throw new Error("Param must be 't' or 'b'")}return Math.abs(this[A+"lR"]-this[A+"rR"])};curvyCnrSpec.prototype.setfrom=function(A){this.tlu=this.tru=this.blu=this.bru="px";if("tl" in A){this.tlR=A.tl.radius}if("tr" in A){this.trR=A.tr.radius}if("bl" in A){this.blR=A.bl.radius}if("br" in A){this.brR=A.br.radius}if("antiAlias" in A){this.antiAlias=A.antiAlias}};curvyCnrSpec.prototype.cloneOn=function(G){var E=["tl","tr","bl","br"];var H=0;var C,A;for(C in E){if(!isNaN(C)){A=this[E[C]+"u"];if(A!==""&&A!=="px"){H=new curvyCnrSpec;break}}}if(!H){H=this}else{var B,D,F=curvyBrowser.get_style(G,"left");for(C in E){if(!isNaN(C)){B=E[C];A=this[B+"u"];D=this[B+"R"];if(A!=="px"){var F=G.style.left;G.style.left=D+A;D=G.style.pixelLeft;G.style.left=F}H[B+"R"]=D;H[B+"u"]="px"}}G.style.left=F}return H};curvyCnrSpec.prototype.radiusSum=function(A){if(A!=="t"&&A!=="b"){throw new Error("Param must be 't' or 'b'")}return this[A+"lR"]+this[A+"rR"]};curvyCnrSpec.prototype.radiusCount=function(A){var B=0;if(this[A+"lR"]){++B}if(this[A+"rR"]){++B}return B};curvyCnrSpec.prototype.cornerNames=function(){var A=[];if(this.tlR){A.push("tl")}if(this.trR){A.push("tr")}if(this.blR){A.push("bl")}if(this.brR){A.push("br")}return A};function operasheet(C){var A=document.styleSheets.item(C).ownerNode.text;A=A.replace(/\/\*(\n|\r|.)*?\*\//g,"");var D=new RegExp("^s*([\\w.#][-\\w.#, ]+)[\\n\\s]*\\{([^}]+border-((top|bottom)-(left|right)-)?radius[^}]*)\\}","mg");var G;this.rules=[];while((G=D.exec(A))!==null){var F=new RegExp("(..)border-((top|bottom)-(left|right)-)?radius:\\s*([\\d.]+)(in|em|px|ex|pt)","g");var E,B=new curvyCnrSpec(G[1]);while((E=F.exec(G[2]))!==null){if(E[1]!=="z-"){B.setcorner(E[3],E[4],E[5],E[6])}}this.rules.push(B)}}operasheet.contains_border_radius=function(A){return/border-((top|bottom)-(left|right)-)?radius/.test(document.styleSheets.item(A).ownerNode.text)};function curvyCorners(){var G,D,E,B,J;if(typeof arguments[0]!=="object"){throw curvyCorners.newError("First parameter of curvyCorners() must be an object.")}if(arguments[0] instanceof curvyCnrSpec){B=arguments[0];if(!B.selectorText&&typeof arguments[1]==="string"){B.selectorText=arguments[1]}}else{if(typeof arguments[1]!=="object"&&typeof arguments[1]!=="string"){throw curvyCorners.newError("Second parameter of curvyCorners() must be an object or a class name.")}D=arguments[1];if(typeof D!=="string"){D=""}if(D!==""&&D.charAt(0)!=="."&&"autoPad" in arguments[0]){D="."+D}B=new curvyCnrSpec(D);B.setfrom(arguments[0])}if(B.selectorText){J=0;var I=B.selectorText.replace(/\s+$/,"").split(/,\s*/);E=new Array;function A(M){var L=M.split("#");return(L.length===2?"#":"")+L.pop()}for(G=0;G<I.length;++G){var K=A(I[G]);var H=K.split(" ");switch(K.charAt(0)){case"#":D=H.length===1?K:H[0];D=document.getElementById(D.substr(1));if(D===null){curvyCorners.alert("No object with ID "+K+" exists yet.\nCall curvyCorners(settings, obj) when it is created.")}else{if(H.length===1){E.push(D)}else{E=E.concat(curvyCorners.getElementsByClass(H[1],D))}}break;default:if(H.length===1){E=E.concat(curvyCorners.getElementsByClass(K))}else{var C=curvyCorners.getElementsByClass(H[0]);for(D=0;D<C.length;++D){E=E.concat(curvyCorners.getElementsByClass(H[1],C))}}}}}else{J=1;E=arguments}for(G=J,D=E.length;G<D;++G){if(E[G]&&(!("IEborderRadius" in E[G].style)||E[G].style.IEborderRadius!="set")){if(E[G].className&&E[G].className.indexOf("curvyRedraw")!==-1){if(typeof curvyCorners.redrawList==="undefined"){curvyCorners.redrawList=new Array}curvyCorners.redrawList.push({node:E[G],spec:B,copy:E[G].cloneNode(false)})}E[G].style.IEborderRadius="set";var F=new curvyObject(B,E[G]);F.applyCorners()}}}curvyCorners.prototype.applyCornersToAll=function(){curvyCorners.alert("This function is now redundant. Just call curvyCorners(). See documentation.")};curvyCorners.redraw=function(){if(!curvyBrowser.isOp&&!curvyBrowser.isIE){return}if(!curvyCorners.redrawList){throw curvyCorners.newError("curvyCorners.redraw() has nothing to redraw.")}var E=curvyCorners.bock_redraw;curvyCorners.block_redraw=true;for(var A in curvyCorners.redrawList){if(isNaN(A)){continue}var D=curvyCorners.redrawList[A];if(!D.node.clientWidth){continue}var B=D.copy.cloneNode(false);for(var C=D.node.firstChild;C!=null;C=C.nextSibling){if(C.className==="autoPadDiv"){break}}if(!C){curvyCorners.alert("Couldn't find autoPad DIV");break}D.node.parentNode.replaceChild(B,D.node);while(C.firstChild){B.appendChild(C.removeChild(C.firstChild))}D=new curvyObject(D.spec,D.node=B);D.applyCorners()}curvyCorners.block_redraw=E};curvyCorners.adjust=function(obj,prop,newval){if(curvyBrowser.isOp||curvyBrowser.isIE){if(!curvyCorners.redrawList){throw curvyCorners.newError("curvyCorners.adjust() has nothing to adjust.")}var i,j=curvyCorners.redrawList.length;for(i=0;i<j;++i){if(curvyCorners.redrawList[i].node===obj){break}}if(i===j){throw curvyCorners.newError("Object not redrawable")}obj=curvyCorners.redrawList[i].copy}if(prop.indexOf(".")===-1){obj[prop]=newval}else{eval("obj."+prop+"='"+newval+"'")}};curvyCorners.handleWinResize=function(){if(!curvyCorners.block_redraw){curvyCorners.redraw()}};curvyCorners.setWinResize=function(A){curvyCorners.block_redraw=!A};curvyCorners.newError=function(A){return new Error("curvyCorners Error:\n"+A)};curvyCorners.alert=function(A){if(typeof curvyCornersVerbose==="undefined"||curvyCornersVerbose){alert(A)}};function curvyObject(){var U;this.box=arguments[1];this.settings=arguments[0];this.topContainer=this.bottomContainer=this.shell=U=null;var K=this.box.clientWidth;if(!K&&curvyBrowser.isIE){this.box.style.zoom=1;K=this.box.clientWidth}if(!K){if(!this.box.parentNode){throw this.newError("box has no parent!")}for(U=this.box;;U=U.parentNode){if(!U||U.tagName==="BODY"){this.applyCorners=function(){};curvyCorners.alert(this.errmsg("zero-width box with no accountable parent","warning"));return}if(U.style.display==="none"){break}}U.style.display="block";K=this.box.clientWidth}if(arguments[0] instanceof curvyCnrSpec){this.spec=arguments[0].cloneOn(this.box)}else{this.spec=new curvyCnrSpec("");this.spec.setfrom(this.settings)}var b=curvyBrowser.get_style(this.box,"borderTopWidth");var J=curvyBrowser.get_style(this.box,"borderBottomWidth");var D=curvyBrowser.get_style(this.box,"borderLeftWidth");var B=curvyBrowser.get_style(this.box,"borderRightWidth");var I=curvyBrowser.get_style(this.box,"borderTopColor");var G=curvyBrowser.get_style(this.box,"borderBottomColor");var A=curvyBrowser.get_style(this.box,"borderLeftColor");var E=curvyBrowser.get_style(this.box,"backgroundColor");var C=curvyBrowser.get_style(this.box,"backgroundImage");var Y=curvyBrowser.get_style(this.box,"backgroundRepeat");if(this.box.currentStyle&&this.box.currentStyle.backgroundPositionX){var R=curvyBrowser.get_style(this.box,"backgroundPositionX");var P=curvyBrowser.get_style(this.box,"backgroundPositionY")}else{var R=curvyBrowser.get_style(this.box,"backgroundPosition");R=R.split(" ");var P=R[1];R=R[0]}var O=curvyBrowser.get_style(this.box,"position");var Z=curvyBrowser.get_style(this.box,"paddingTop");var c=curvyBrowser.get_style(this.box,"paddingBottom");var Q=curvyBrowser.get_style(this.box,"paddingLeft");var a=curvyBrowser.get_style(this.box,"paddingRight");var S=curvyBrowser.get_style(this.box,"border");filter=curvyBrowser.ieVer>7?curvyBrowser.get_style(this.box,"filter"):null;var H=this.spec.get("tR");var M=this.spec.get("bR");var W=function(f){if(typeof f==="number"){return f}if(typeof f!=="string"){throw new Error("unexpected styleToNPx type "+typeof f)}var d=/^[-\d.]([a-z]+)$/.exec(f);if(d&&d[1]!="px"){throw new Error("Unexpected unit "+d[1])}if(isNaN(f=parseInt(f))){f=0}return f};var T=function(d){return d<=0?"0":d+"px"};try{this.borderWidth=W(b);this.borderWidthB=W(J);this.borderWidthL=W(D);this.borderWidthR=W(B);this.boxColour=curvyObject.format_colour(E);this.topPadding=W(Z);this.bottomPadding=W(c);this.leftPadding=W(Q);this.rightPadding=W(a);this.boxWidth=K;this.boxHeight=this.box.clientHeight;this.borderColour=curvyObject.format_colour(I);this.borderColourB=curvyObject.format_colour(G);this.borderColourL=curvyObject.format_colour(A);this.borderString=this.borderWidth+"px solid "+this.borderColour;this.borderStringB=this.borderWidthB+"px solid "+this.borderColourB;this.backgroundImage=((C!="none")?C:"");this.backgroundRepeat=Y}catch(X){throw this.newError("getMessage" in X?X.getMessage():X.message)}var F=this.boxHeight;var V=K;if(curvyBrowser.isOp){R=W(R);P=W(P);if(R){var N=V+this.borderWidthL+this.borderWidthR;if(R>N){R=N}R=(N/R*100)+"%"}if(P){var N=F+this.borderWidth+this.borderWidthB;if(P>N){P=N}P=(N/P*100)+"%"}}if(curvyBrowser.quirksMode){}else{this.boxWidth-=this.leftPadding+this.rightPadding;this.boxHeight-=this.topPadding+this.bottomPadding}this.contentContainer=document.createElement("div");if(filter){this.contentContainer.style.filter=filter}while(this.box.firstChild){this.contentContainer.appendChild(this.box.removeChild(this.box.firstChild))}if(O!="absolute"){this.box.style.position="relative"}this.box.style.padding="0";this.box.style.border=this.box.style.backgroundImage="none";this.box.style.backgroundColor="transparent";this.box.style.width=(V+this.borderWidthL+this.borderWidthR)+"px";this.box.style.height=(F+this.borderWidth+this.borderWidthB)+"px";var L=document.createElement("div");L.style.position="absolute";if(filter){L.style.filter=filter}if(curvyBrowser.quirksMode){L.style.width=(V+this.borderWidthL+this.borderWidthR)+"px"}else{L.style.width=V+"px"}L.style.height=T(F+this.borderWidth+this.borderWidthB-H-M);L.style.padding="0";L.style.top=H+"px";L.style.left="0";if(this.borderWidthL){L.style.borderLeft=this.borderWidthL+"px solid "+this.borderColourL}if(this.borderWidth&&!H){L.style.borderTop=this.borderWidth+"px solid "+this.borderColour}if(this.borderWidthR){L.style.borderRight=this.borderWidthR+"px solid "+this.borderColourL}if(this.borderWidthB&&!M){L.style.borderBottom=this.borderWidthB+"px solid "+this.borderColourB}L.style.backgroundColor=E;L.style.backgroundImage=this.backgroundImage;L.style.backgroundRepeat=this.backgroundRepeat;this.shell=this.box.appendChild(L);K=curvyBrowser.get_style(this.shell,"width");if(K===""||K==="auto"||K.indexOf("%")!==-1){throw this.newError("Shell width is "+K)}this.boxWidth=(K!=""&&K!="auto"&&K.indexOf("%")==-1)?parseInt(K):this.shell.clientWidth;this.applyCorners=function(){if(this.backgroundObject){var w=function(AO,i,t){if(AO===0){return 0}var k;if(AO==="right"||AO==="bottom"){return t-i}if(AO==="center"){return(t-i)/2}if(AO.indexOf("%")>0){return(t-i)*100/parseInt(AO)}return W(AO)};this.backgroundPosX=w(R,this.backgroundObject.width,V);this.backgroundPosY=w(P,this.backgroundObject.height,F)}else{if(this.backgroundImage){this.backgroundPosX=W(R);this.backgroundPosY=W(P)}}if(H){v=document.createElement("div");v.style.width=this.boxWidth+"px";v.style.fontSize="1px";v.style.overflow="hidden";v.style.position="absolute";v.style.paddingLeft=this.borderWidth+"px";v.style.paddingRight=this.borderWidth+"px";v.style.height=H+"px";v.style.top=-H+"px";v.style.left=-this.borderWidthL+"px";this.topContainer=this.shell.appendChild(v)}if(M){var v=document.createElement("div");v.style.width=this.boxWidth+"px";v.style.fontSize="1px";v.style.overflow="hidden";v.style.position="absolute";v.style.paddingLeft=this.borderWidthB+"px";v.style.paddingRight=this.borderWidthB+"px";v.style.height=M+"px";v.style.bottom=-M+"px";v.style.left=-this.borderWidthL+"px";this.bottomContainer=this.shell.appendChild(v)}var AG=this.spec.cornerNames();for(var AK in AG){if(!isNaN(AK)){var AC=AG[AK];var AD=this.spec[AC+"R"];var AE,AH,j,AF;if(AC=="tr"||AC=="tl"){AE=this.borderWidth;AH=this.borderColour;AF=this.borderWidth}else{AE=this.borderWidthB;AH=this.borderColourB;AF=this.borderWidthB}j=AD-AF;var u=document.createElement("div");u.style.height=this.spec.get(AC+"Ru");u.style.width=this.spec.get(AC+"Ru");u.style.position="absolute";u.style.fontSize="1px";u.style.overflow="hidden";var r,q,p;var n=filter?parseInt(/alpha\(opacity.(\d+)\)/.exec(filter)[1]):100;for(r=0;r<AD;++r){var m=(r+1>=j)?-1:Math.floor(Math.sqrt(Math.pow(j,2)-Math.pow(r+1,2)))-1;if(j!=AD){var h=(r>=j)?-1:Math.ceil(Math.sqrt(Math.pow(j,2)-Math.pow(r,2)));var f=(r+1>=AD)?-1:Math.floor(Math.sqrt(Math.pow(AD,2)-Math.pow((r+1),2)))-1}var d=(r>=AD)?-1:Math.ceil(Math.sqrt(Math.pow(AD,2)-Math.pow(r,2)));if(m>-1){this.drawPixel(r,0,this.boxColour,n,(m+1),u,true,AD)}if(j!=AD){if(this.spec.antiAlias){for(q=m+1;q<h;++q){if(this.backgroundImage!=""){var g=curvyObject.pixelFraction(r,q,j)*100;this.drawPixel(r,q,AH,n,1,u,g>=30,AD)}else{if(this.boxColour!=="transparent"){var AB=curvyObject.BlendColour(this.boxColour,AH,curvyObject.pixelFraction(r,q,j));this.drawPixel(r,q,AB,n,1,u,false,AD)}else{this.drawPixel(r,q,AH,n>>1,1,u,false,AD)}}}if(f>=h){if(h==-1){h=0}this.drawPixel(r,h,AH,n,(f-h+1),u,false,0)}p=AH;q=f}else{if(f>m){this.drawPixel(r,(m+1),AH,n,(f-m),u,false,0)}}}else{p=this.boxColour;q=m}if(this.spec.antiAlias){while(++q<d){this.drawPixel(r,q,p,(curvyObject.pixelFraction(r,q,AD)*n),1,u,AF<=0,AD)}}}for(var y=0,AJ=u.childNodes.length;y<AJ;++y){var s=u.childNodes[y];var AI=parseInt(s.style.top);var AM=parseInt(s.style.left);var AN=parseInt(s.style.height);if(AC=="tl"||AC=="bl"){s.style.left=(AD-AM-1)+"px"}if(AC=="tr"||AC=="tl"){s.style.top=(AD-AN-AI)+"px"}s.style.backgroundRepeat=this.backgroundRepeat;if(this.backgroundImage){switch(AC){case"tr":s.style.backgroundPosition=(this.backgroundPosX-this.borderWidthL+AD-V-AM)+"px "+(this.backgroundPosY+AN+AI+this.borderWidth-AD)+"px";break;case"tl":s.style.backgroundPosition=(this.backgroundPosX-AD+AM+this.borderWidthL)+"px "+(this.backgroundPosY-AD+AN+AI+this.borderWidth)+"px";break;case"bl":s.style.backgroundPosition=(this.backgroundPosX-AD+AM+1+this.borderWidthL)+"px "+(this.backgroundPosY-F-this.borderWidth+(curvyBrowser.quirksMode?AI:-AI)+AD)+"px";break;case"br":if(curvyBrowser.quirksMode){s.style.backgroundPosition=(this.backgroundPosX+this.borderWidthL-V+AD-AM)+"px "+(this.backgroundPosY-F-this.borderWidth+AI+AD)+"px"}else{s.style.backgroundPosition=(this.backgroundPosX-this.borderWidthL-V+AD-AM)+"px "+(this.backgroundPosY-F-this.borderWidth+AD-AI)+"px"}}}}switch(AC){case"tl":u.style.top=u.style.left="0";this.topContainer.appendChild(u);break;case"tr":u.style.top=u.style.right="0";this.topContainer.appendChild(u);break;case"bl":u.style.bottom=u.style.left="0";this.bottomContainer.appendChild(u);break;case"br":u.style.bottom=u.style.right="0";this.bottomContainer.appendChild(u)}}}var x={t:this.spec.radiusdiff("t"),b:this.spec.radiusdiff("b")};for(z in x){if(typeof z==="function"){continue}if(!this.spec.get(z+"R")){continue}if(x[z]){if(this.backgroundImage&&this.spec.radiusSum(z)!==x[z]){curvyCorners.alert(this.errmsg("Not supported: unequal non-zero top/bottom radii with background image"))}var AL=(this.spec[z+"lR"]<this.spec[z+"rR"])?z+"l":z+"r";var l=document.createElement("div");l.style.height=x[z]+"px";l.style.width=this.spec.get(AL+"Ru");l.style.position="absolute";l.style.fontSize="1px";l.style.overflow="hidden";l.style.backgroundColor=this.boxColour;switch(AL){case"tl":l.style.bottom=l.style.left="0";l.style.borderLeft=this.borderString;this.topContainer.appendChild(l);break;case"tr":l.style.bottom=l.style.right="0";l.style.borderRight=this.borderString;this.topContainer.appendChild(l);break;case"bl":l.style.top=l.style.left="0";l.style.borderLeft=this.borderStringB;this.bottomContainer.appendChild(l);break;case"br":l.style.top=l.style.right="0";l.style.borderRight=this.borderStringB;this.bottomContainer.appendChild(l)}}var o=document.createElement("div");if(filter){o.style.filter=filter}o.style.position="relative";o.style.fontSize="1px";o.style.overflow="hidden";o.style.width=this.fillerWidth(z);o.style.backgroundColor=this.boxColour;o.style.backgroundImage=this.backgroundImage;o.style.backgroundRepeat=this.backgroundRepeat;switch(z){case"t":if(this.topContainer){if(curvyBrowser.quirksMode){o.style.height=100+H+"px"}else{o.style.height=100+H-this.borderWidth+"px"}o.style.marginLeft=this.spec.tlR?(this.spec.tlR-this.borderWidthL)+"px":"0";o.style.borderTop=this.borderString;if(this.backgroundImage){var AA=this.spec.tlR?(this.backgroundPosX-(H-this.borderWidthL))+"px ":"0 ";o.style.backgroundPosition=AA+this.backgroundPosY+"px";this.shell.style.backgroundPosition=this.backgroundPosX+"px "+(this.backgroundPosY-H+this.borderWidthL)+"px"}this.topContainer.appendChild(o)}break;case"b":if(this.bottomContainer){if(curvyBrowser.quirksMode){o.style.height=M+"px"}else{o.style.height=M-this.borderWidthB+"px"}o.style.marginLeft=this.spec.blR?(this.spec.blR-this.borderWidthL)+"px":"0";o.style.borderBottom=this.borderStringB;if(this.backgroundImage){var AA=this.spec.blR?(this.backgroundPosX+this.borderWidthL-M)+"px ":this.backgroundPosX+"px ";o.style.backgroundPosition=AA+(this.backgroundPosY-F-this.borderWidth+M)+"px"}this.bottomContainer.appendChild(o)}}}this.contentContainer.style.position="absolute";this.contentContainer.className="autoPadDiv";this.contentContainer.style.left=this.borderWidthL+"px";this.contentContainer.style.paddingTop=this.topPadding+"px";this.contentContainer.style.top=this.borderWidth+"px";this.contentContainer.style.paddingLeft=this.leftPadding+"px";this.contentContainer.style.paddingRight=this.rightPadding+"px";z=V;if(!curvyBrowser.quirksMode){z-=this.leftPadding+this.rightPadding}this.contentContainer.style.width=z+"px";this.contentContainer.style.textAlign=curvyBrowser.get_style(this.box,"textAlign");this.box.style.textAlign="left";this.box.appendChild(this.contentContainer);if(U){U.style.display="none"}};if(this.backgroundImage){R=this.backgroundCheck(R);P=this.backgroundCheck(P);if(this.backgroundObject){this.backgroundObject.holdingElement=this;this.dispatch=this.applyCorners;this.applyCorners=function(){if(this.backgroundObject.complete){this.dispatch()}else{this.backgroundObject.onload=new Function("curvyObject.dispatch(this.holdingElement);")}}}}}curvyObject.prototype.backgroundCheck=function(B){if(B==="top"||B==="left"||parseInt(B)===0){return 0}if(!(/^[-\d.]+px$/.test(B))&&!this.backgroundObject){this.backgroundObject=new Image;var A=function(D){var C=/url\("?([^'"]+)"?\)/.exec(D);return(C?C[1]:D)};this.backgroundObject.src=A(this.backgroundImage)}return B};curvyObject.dispatch=function(A){if("dispatch" in A){A.dispatch()}else{throw A.newError("No dispatch function")}};curvyObject.prototype.drawPixel=function(J,G,A,F,H,I,C,E){var B=document.createElement("div");B.style.height=H+"px";B.style.width="1px";B.style.position="absolute";B.style.fontSize="1px";B.style.overflow="hidden";var D=this.spec.get("tR");B.style.backgroundColor=A;if(C&&this.backgroundImage!=""){B.style.backgroundImage=this.backgroundImage;B.style.backgroundPosition="-"+(this.boxWidth-(E-J)+this.borderWidth)+"px -"+((this.boxHeight+D+G)-this.borderWidth)+"px"}if(F!=100){curvyObject.setOpacity(B,F)}B.style.top=G+"px";B.style.left=J+"px";I.appendChild(B)};curvyObject.prototype.fillerWidth=function(A){var B=curvyBrowser.quirksMode?0:this.spec.radiusCount(A)*this.borderWidthL;return(this.boxWidth-this.spec.radiusSum(A)+B)+"px"};curvyObject.prototype.errmsg=function(C,D){var B="\ntag: "+this.box.tagName;if(this.box.id){B+="\nid: "+this.box.id}if(this.box.className){B+="\nclass: "+this.box.className}var A;if((A=this.box.parentNode)===null){B+="\n(box has no parent)"}else{B+="\nParent tag: "+A.tagName;if(A.id){B+="\nParent ID: "+A.id}if(A.className){B+="\nParent class: "+A.className}}if(D===undefined){D="warning"}return"curvyObject "+D+":\n"+C+B};curvyObject.prototype.newError=function(A){return new Error(this.errmsg(A,"exception"))};curvyObject.IntToHex=function(B){var A=["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"];return A[B>>>4]+""+A[B&15]};curvyObject.BlendColour=function(L,J,G){if(L==="transparent"||J==="transparent"){throw this.newError("Cannot blend with transparent")}if(L.charAt(0)!=="#"){L=curvyObject.format_colour(L)}if(J.charAt(0)!=="#"){J=curvyObject.format_colour(J)}var D=parseInt(L.substr(1,2),16);var K=parseInt(L.substr(3,2),16);var F=parseInt(L.substr(5,2),16);var C=parseInt(J.substr(1,2),16);var I=parseInt(J.substr(3,2),16);var E=parseInt(J.substr(5,2),16);if(G>1||G<0){G=1}var H=Math.round((D*G)+(C*(1-G)));if(H>255){H=255}if(H<0){H=0}var B=Math.round((K*G)+(I*(1-G)));if(B>255){B=255}if(B<0){B=0}var A=Math.round((F*G)+(E*(1-G)));if(A>255){A=255}if(A<0){A=0}return"#"+curvyObject.IntToHex(H)+curvyObject.IntToHex(B)+curvyObject.IntToHex(A)};curvyObject.pixelFraction=function(H,G,A){var J;var E=A*A;var B=new Array(2);var F=new Array(2);var I=0;var C="";var D=Math.sqrt(E-Math.pow(H,2));if(D>=G&&D<(G+1)){C="Left";B[I]=0;F[I]=D-G;++I}D=Math.sqrt(E-Math.pow(G+1,2));if(D>=H&&D<(H+1)){C+="Top";B[I]=D-H;F[I]=1;++I}D=Math.sqrt(E-Math.pow(H+1,2));if(D>=G&&D<(G+1)){C+="Right";B[I]=1;F[I]=D-G;++I}D=Math.sqrt(E-Math.pow(G,2));if(D>=H&&D<(H+1)){C+="Bottom";B[I]=D-H;F[I]=0}switch(C){case"LeftRight":J=Math.min(F[0],F[1])+((Math.max(F[0],F[1])-Math.min(F[0],F[1]))/2);break;case"TopRight":J=1-(((1-B[0])*(1-F[1]))/2);break;case"TopBottom":J=Math.min(B[0],B[1])+((Math.max(B[0],B[1])-Math.min(B[0],B[1]))/2);break;case"LeftBottom":J=F[0]*B[1]/2;break;default:J=1}return J};curvyObject.rgb2Array=function(A){var B=A.substring(4,A.indexOf(")"));return B.split(", ")};curvyObject.rgb2Hex=function(B){try{var C=curvyObject.rgb2Array(B);var G=parseInt(C[0]);var E=parseInt(C[1]);var A=parseInt(C[2]);var D="#"+curvyObject.IntToHex(G)+curvyObject.IntToHex(E)+curvyObject.IntToHex(A)}catch(F){var H="getMessage" in F?F.getMessage():F.message;throw new Error("Error ("+H+") converting RGB value to Hex in rgb2Hex")}return D};curvyObject.setOpacity=function(F,C){C=(C==100)?99.999:C;if(curvyBrowser.isSafari&&F.tagName!="IFRAME"){var B=curvyObject.rgb2Array(F.style.backgroundColor);var E=parseInt(B[0]);var D=parseInt(B[1]);var A=parseInt(B[2]);F.style.backgroundColor="rgba("+E+", "+D+", "+A+", "+C/100+")"}else{if(typeof F.style.opacity!=="undefined"){F.style.opacity=C/100}else{if(typeof F.style.MozOpacity!=="undefined"){F.style.MozOpacity=C/100}else{if(typeof F.style.filter!="undefined"){F.style.filter="alpha(opacity="+C+")"}else{if(typeof F.style.KHTMLOpacity!="undefined"){F.style.KHTMLOpacity=C/100}}}}}};function addEvent(D,C,B,A){if(D.addEventListener){D.addEventListener(C,B,A);return true}if(D.attachEvent){return D.attachEvent("on"+C,B)}D["on"+C]=B;return false}curvyObject.getComputedColour=function(E){var F=document.createElement("DIV");F.style.backgroundColor=E;document.body.appendChild(F);if(window.getComputedStyle){var D=document.defaultView.getComputedStyle(F,null).getPropertyValue("background-color");F.parentNode.removeChild(F);if(D.substr(0,3)==="rgb"){D=curvyObject.rgb2Hex(D)}return D}else{var A=document.body.createTextRange();A.moveToElementText(F);A.execCommand("ForeColor",false,E);var B=A.queryCommandValue("ForeColor");var C="rgb("+(B&255)+", "+((B&65280)>>8)+", "+((B&16711680)>>16)+")";F.parentNode.removeChild(F);A=null;return curvyObject.rgb2Hex(C)}};curvyObject.format_colour=function(A){if(A!=""&&A!="transparent"){if(A.substr(0,3)==="rgb"){A=curvyObject.rgb2Hex(A)}else{if(A.charAt(0)!=="#"){A=curvyObject.getComputedColour(A)}else{if(A.length===4){A="#"+A.charAt(1)+A.charAt(1)+A.charAt(2)+A.charAt(2)+A.charAt(3)+A.charAt(3)}}}}return A};curvyCorners.getElementsByClass=function(H,F){var E=new Array;if(F===undefined){F=document}H=H.split(".");var A="*";if(H.length===1){A=H[0];H=false}else{if(H[0]){A=H[0]}H=H[1]}var D,C,B;if(A.charAt(0)==="#"){C=document.getElementById(A.substr(1));if(C){E.push(C)}}else{C=F.getElementsByTagName(A);B=C.length;if(H){var G=new RegExp("(^|\\s)"+H+"(\\s|$)");for(D=0;D<B;++D){if(G.test(C[D].className)){E.push(C[D])}}}else{for(D=0;D<B;++D){E.push(C[D])}}}return E};if(curvyBrowser.isMoz||curvyBrowser.isWebKit){var curvyCornersNoAutoScan=true}else{curvyCorners.scanStyles=function(){function B(F){var G=/^[\d.]+(\w+)$/.exec(F);return G[1]}var E,D,C;if(curvyBrowser.isIE){function A(L){var J=L.style;if(curvyBrowser.ieVer>6){var H=J["-webkit-border-radius"]||0;var K=J["-webkit-border-top-right-radius"]||0;var F=J["-webkit-border-top-left-radius"]||0;var G=J["-webkit-border-bottom-right-radius"]||0;var M=J["-webkit-border-bottom-left-radius"]||0}else{var H=J["webkit-border-radius"]||0;var K=J["webkit-border-top-right-radius"]||0;var F=J["webkit-border-top-left-radius"]||0;var G=J["webkit-border-bottom-right-radius"]||0;var M=J["webkit-border-bottom-left-radius"]||0}if(H||F||K||G||M){var I=new curvyCnrSpec(L.selectorText);if(H){I.setcorner(null,null,parseInt(H),B(H))}else{if(K){I.setcorner("t","r",parseInt(K),B(K))}if(F){I.setcorner("t","l",parseInt(F),B(F))}if(M){I.setcorner("b","l",parseInt(M),B(M))}if(G){I.setcorner("b","r",parseInt(G),B(G))}}curvyCorners(I)}}for(E=0;E<document.styleSheets.length;++E){if(document.styleSheets[E].imports){for(D=0;D<document.styleSheets[E].imports.length;++D){for(C=0;C<document.styleSheets[E].imports[D].rules.length;++C){A(document.styleSheets[E].imports[D].rules[C])}}}for(D=0;D<document.styleSheets[E].rules.length;++D){A(document.styleSheets[E].rules[D])}}}else{if(curvyBrowser.isOp){for(E=0;E<document.styleSheets.length;++E){if(operasheet.contains_border_radius(E)){C=new operasheet(E);for(D in C.rules){if(!isNaN(D)){curvyCorners(C.rules[D])}}}}}else{curvyCorners.alert("Scanstyles does nothing in Webkit/Firefox")}}};curvyCorners.init=function(){if(arguments.callee.done){return}arguments.callee.done=true;if(curvyBrowser.isWebKit&&curvyCorners.init.timer){clearInterval(curvyCorners.init.timer);curvyCorners.init.timer=null}curvyCorners.scanStyles()}}if(typeof curvyCornersNoAutoScan==="undefined"||curvyCornersNoAutoScan===false){if(curvyBrowser.isOp){document.addEventListener("DOMContentLoaded",curvyCorners.init,false)}else{addEvent(window,"load",curvyCorners.init,false)}};
